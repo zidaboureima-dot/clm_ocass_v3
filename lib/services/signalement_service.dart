@@ -29,15 +29,54 @@ class SignalementService {
     }
   }
 
-  /// Flux temps réel de tous les signalements. Se met à jour automatiquement
-  /// à chaque insertion/modification côté Supabase (nécessite que la
-  /// réplication Realtime soit activée sur la table `signalements`).
   Stream<List<Map<String, dynamic>>> streamSignalements() {
     return SupabaseConfig.client.from('signalements').stream(primaryKey: ['id']);
   }
 
-  /// Calcule les compteurs affichés sur la page d'accueil à partir d'une
-  /// liste brute de signalements (utilisé avec [streamSignalements]).
+  Stream<List<Signalement>> streamSignalementsParRegion(String region) {
+    return SupabaseConfig.client
+        .from('signalements')
+        .stream(primaryKey: ['id'])
+        .eq('region', region)
+        .order('soumis_le', ascending: false)
+        .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
+  }
+
+  Stream<List<Signalement>> streamSignalementsAssignes(String pointFocalUid) {
+    return SupabaseConfig.client
+        .from('signalements')
+        .stream(primaryKey: ['id'])
+        .eq('assignee_uid', pointFocalUid)
+        .order('soumis_le', ascending: false)
+        .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
+  }
+
+  Future<void> mettreAJourStatut(String signalementId, String statut) async {
+    try {
+      await SupabaseConfig.client.from('signalements').update({'statut': statut}).eq('id', signalementId);
+    } catch (e) {
+      throw Exception('Erreur mise à jour statut: $e');
+    }
+  }
+
+  Future<void> assignerPointFocal({
+    required String signalementId,
+    required String pointFocalUid,
+    required String superviseurUid,
+    required String statutActuel,
+  }) async {
+    try {
+      final donnees = <String, dynamic>{
+        'assignee_uid': pointFocalUid,
+        'superviseur_uid': superviseurUid,
+      };
+      if (statutActuel == 'nouveau') donnees['statut'] = 'en_cours';
+      await SupabaseConfig.client.from('signalements').update(donnees).eq('id', signalementId);
+    } catch (e) {
+      throw Exception('Erreur assignation: $e');
+    }
+  }
+
   Map<String, int> calculerStats(List<Map<String, dynamic>> lignes) {
     return {
       'total': lignes.length,
