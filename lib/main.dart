@@ -4,6 +4,7 @@ import 'theme/app_theme.dart';
 import 'theme/app_colors.dart';
 import 'services/signalement_service.dart';
 import 'screens/signalement_form_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -136,8 +137,8 @@ class _HomePageState extends State<HomePage> {
               icon: const Icon(Icons.admin_panel_settings_outlined, size: 20),
               label: const Text('Accès admin'),
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Connexion : Phase 2 (à venir)')),
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
               },
               style: TextButton.styleFrom(minimumSize: const Size.fromHeight(36)),

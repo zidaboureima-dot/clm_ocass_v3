@@ -32,4 +32,8 @@ class AuthService {
   }
 
   bool isLoggedIn() => SupabaseConfig.client.auth.currentUser != null;
+
+  Future<void> logout() async {
+    await SupabaseConfig.client.auth.signOut();
+  }
 }
