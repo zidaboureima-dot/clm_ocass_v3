@@ -33,6 +33,14 @@ class SignalementService {
     return SupabaseConfig.client.from('signalements').stream(primaryKey: ['id']);
   }
 
+  Stream<List<Signalement>> streamToutesSignalements() {
+    return SupabaseConfig.client
+        .from('signalements')
+        .stream(primaryKey: ['id'])
+        .order('soumis_le', ascending: false)
+        .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
+  }
+
   Stream<List<Signalement>> streamSignalementsParRegion(String region) {
     return SupabaseConfig.client
         .from('signalements')
