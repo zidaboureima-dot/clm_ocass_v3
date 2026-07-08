@@ -57,6 +57,7 @@ class Signalement {
   }
 
   Map<String, dynamic> toJson() => {
+    if (id != null) 'id': id,
     'anonyme': anonyme,
     'prefecture': prefecture,
     'centre_sante': centreSante,

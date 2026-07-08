@@ -4,7 +4,9 @@ import 'theme/app_theme.dart';
 import 'theme/app_colors.dart';
 import 'services/signalement_service.dart';
 import 'screens/signalement_form_screen.dart';
+import 'screens/message_vocal_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/public_stats_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -123,11 +125,22 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
+              icon: const Icon(Icons.mic_outlined, size: 20),
+              label: const Text('Message vocal (sans lecture)'),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const MessageVocalScreen()),
+                );
+              },
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
               icon: const Icon(Icons.bar_chart_outlined, size: 20),
               label: const Text('Statistiques publiques'),
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tableau de bord public : Phase 2 (à venir)')),
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const PublicStatsScreen()),
                 );
               },
               style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),

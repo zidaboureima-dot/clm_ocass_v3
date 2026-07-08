@@ -3,10 +3,13 @@ import '../data/regions_prefectures.dart';
 import '../models/signalement_model.dart';
 import '../models/user_profile_model.dart';
 import '../services/auth_service.dart';
+import '../services/message_vocal_service.dart';
 import '../services/signalement_service.dart';
 import '../theme/app_colors.dart';
 import 'admin_categories_tab.dart';
+import 'admin_messages_vocaux_tab.dart';
 import 'signalement_detail_screen.dart';
+import 'stats_body.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   final UserProfile profil;
@@ -61,14 +64,36 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Espace administrateur'),
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Signalements'),
-              Tab(text: 'Catégories'),
+              const Tab(text: 'Signalements'),
+              const Tab(text: 'Catégories'),
+              const Tab(text: 'Statistiques'),
+              Tab(
+                child: StreamBuilder(
+                  stream: MessageVocalService().streamMessagesNonTraites(),
+                  builder: (context, snapshot) {
+                    final n = snapshot.data?.length ?? 0;
+                    if (n == 0) return const Text('Messages vocaux');
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Messages vocaux'),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(color: AppColors.rouge, borderRadius: BorderRadius.circular(10)),
+                          child: Text('$n', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ],
           ),
           actions: [
@@ -200,6 +225,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
             const AdminCategoriesTab(),
+            StatsBody(
+              stream: SignalementService().streamToutesSignalements(),
+              description: 'Vue nationale, toutes régions confondues.',
+            ),
+            AdminMessagesVocauxTab(adminUid: widget.profil.id),
           ],
         ),
       ),

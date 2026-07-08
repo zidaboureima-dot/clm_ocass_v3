@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/signalement_service.dart';
 import '../theme/app_colors.dart';
 import 'signalement_detail_screen.dart';
+import 'stats_body.dart';
 
 class PointFocalDashboardScreen extends StatefulWidget {
   final UserProfile profil;
@@ -61,6 +62,24 @@ class _PointFocalDashboardScreenState extends State<PointFocalDashboardScreen> {
       appBar: AppBar(
         title: const Text('Espace point focal'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart_outlined),
+            tooltip: 'Statistiques de la préfecture',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => Scaffold(
+                    appBar: AppBar(title: Text('Statistiques — ${widget.profil.prefecture ?? ''}')),
+                    body: StatsBody(
+                      stream: SignalementService().streamSignalementsParPrefecture(widget.profil.prefecture ?? ''),
+                      description: 'Vue préfectorale : ${widget.profil.prefecture ?? ''}, tous les signalements (pas seulement ceux qui vous sont assignés).',
+                      afficherRepartitionRegion: false,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Déconnexion',

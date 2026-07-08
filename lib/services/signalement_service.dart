@@ -50,6 +50,15 @@ class SignalementService {
         .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
   }
 
+  Stream<List<Signalement>> streamSignalementsParPrefecture(String prefecture) {
+    return SupabaseConfig.client
+        .from('signalements')
+        .stream(primaryKey: ['id'])
+        .eq('prefecture', prefecture)
+        .order('soumis_le', ascending: false)
+        .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
+  }
+
   Stream<List<Signalement>> streamSignalementsAssignes(String pointFocalUid) {
     return SupabaseConfig.client
         .from('signalements')

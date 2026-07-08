@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../data/regions_prefectures.dart';
 import '../models/categorie_model.dart';
 import '../models/signalement_model.dart';
+import '../services/audio_service.dart';
 import '../services/categorie_service.dart';
 import '../services/signalement_service.dart';
 import '../theme/app_colors.dart';
+import 'audio_recorder_field.dart';
 
 class SignalementFormScreen extends StatefulWidget {
   const SignalementFormScreen({super.key});
@@ -31,6 +35,8 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
   String _nature = 'normal';
   final _descriptionController = TextEditingController();
   DateTime? _dateIncident;
+  File? _fichierAudio;
+  int? _dureeAudioSecondes;
 
   final _formKeyEtape1 = GlobalKey<FormState>();
   final _formKeyEtape2 = GlobalKey<FormState>();
@@ -86,7 +92,9 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
   Future<void> _soumettre() async {
     setState(() => _envoiEnCours = true);
     try {
+      final idSignalement = const Uuid().v4();
       final signalement = Signalement(
+        id: idSignalement,
         anonyme: true,
         prefecture: _prefecture!,
         centreSante: _centreSanteController.text.trim(),
@@ -103,6 +111,21 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
         statut: 'nouveau',
       );
       await SignalementService().creerSignalement(signalement);
+      if (_fichierAudio != null) {
+        try {
+          await AudioService().uploaderAudio(
+            signalementId: idSignalement,
+            fichier: _fichierAudio!,
+            dureeSecondes: _dureeAudioSecondes,
+          );
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Signalement envoyé, mais l\'audio n\'a pas pu être joint : $e')),
+            );
+          }
+        }
+      }
       if (!mounted) return;
       _afficherConfirmation();
     } catch (e) {
@@ -327,16 +350,28 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  AudioRecorderField(
+                    onEnregistrement: (fichier, duree) {
+                      setState(() {
+                        _fichierAudio = fichier;
+                        _dureeAudioSecondes = duree;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _descriptionController,
                     maxLines: 5,
                     decoration: const InputDecoration(
-                      labelText: 'Description des faits',
+                      labelText: 'Description des faits (ou message vocal ci-dessus)',
                       alignLabelWithHint: true,
                     ),
-                    validator: (v) => (v == null || v.trim().length < 10)
-                        ? 'Décrivez les faits (10 caractères minimum)'
-                        : null,
+                    validator: (v) {
+                      if (_fichierAudio != null) return null;
+                      return (v == null || v.trim().length < 10)
+                          ? 'Décrivez les faits (10 caractères minimum) ou enregistrez un message vocal ci-dessus'
+                          : null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
@@ -382,7 +417,8 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
                     _categorieEstAutre ? _autrePreciseController.text : (_categorieSelectionnee?.libelle ?? ''),
                   ),
                   _LigneRecap('Gravité', _nature),
-                  _LigneRecap('Description', _descriptionController.text),
+                  _LigneRecap('Description', _descriptionController.text.isEmpty ? '(voir message vocal)' : _descriptionController.text),
+                  if (_fichierAudio != null) _LigneRecap('Message vocal', 'Joint (${_dureeAudioSecondes ?? 0} s)'),
                   const SizedBox(height: 8),
                   const Text(
                     'Ce signalement est anonyme : aucune information permettant de vous identifier n\'est collectée.',

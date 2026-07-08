@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/signalement_service.dart';
 import '../theme/app_colors.dart';
 import 'signalement_detail_screen.dart';
+import 'stats_body.dart';
 
 class SuperviseurDashboardScreen extends StatefulWidget {
   final UserProfile profil;
@@ -61,6 +62,24 @@ class _SuperviseurDashboardScreenState extends State<SuperviseurDashboardScreen>
       appBar: AppBar(
         title: const Text('Espace superviseur'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart_outlined),
+            tooltip: 'Statistiques de la région',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => Scaffold(
+                    appBar: AppBar(title: Text('Statistiques — ${widget.profil.region ?? ''}')),
+                    body: StatsBody(
+                      stream: SignalementService().streamSignalementsParRegion(widget.profil.region ?? ''),
+                      description: 'Vue régionale : ${widget.profil.region ?? ''}.',
+                      afficherRepartitionRegion: false,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Déconnexion',
