@@ -8,15 +8,10 @@ class SignalementService {
 
   factory SignalementService() => _instance;
 
-  Future<String> creerSignalement(Signalement signalement) async {
+  Future<void> creerSignalement(Signalement signalement) async {
     try {
       final data = signalement.toJson();
-      final response = await SupabaseConfig.client
-          .from('signalements')
-          .insert(data)
-          .select()
-          .single();
-      return response['id'];
+      await SupabaseConfig.client.from('signalements').insert(data);
     } catch (e) {
       throw Exception('Erreur creation: $e');
     }
@@ -34,20 +29,21 @@ class SignalementService {
     }
   }
 
-  Future<Map<String, dynamic>> obtenirStats() async {
-    try {
-      final total = await SupabaseConfig.client
-          .from('signalements')
-          .select()
-          .count();
-      final traites = await SupabaseConfig.client
-          .from('signalements')
-          .select()
-          .eq('statut', 'traite')
-          .count();
-      return {'total': total.count, 'traites': traites.count};
-    } catch (e) {
-      throw Exception('Erreur stats: $e');
-    }
+  /// Flux temps réel de tous les signalements. Se met à jour automatiquement
+  /// à chaque insertion/modification côté Supabase (nécessite que la
+  /// réplication Realtime soit activée sur la table `signalements`).
+  Stream<List<Map<String, dynamic>>> streamSignalements() {
+    return SupabaseConfig.client.from('signalements').stream(primaryKey: ['id']);
+  }
+
+  /// Calcule les compteurs affichés sur la page d'accueil à partir d'une
+  /// liste brute de signalements (utilisé avec [streamSignalements]).
+  Map<String, int> calculerStats(List<Map<String, dynamic>> lignes) {
+    return {
+      'total': lignes.length,
+      'en_cours': lignes.where((l) => l['statut'] == 'en_cours').length,
+      'traites': lignes.where((l) => l['statut'] == 'traite').length,
+      'clotures': lignes.where((l) => l['statut'] == 'cloture').length,
+    };
   }
 }

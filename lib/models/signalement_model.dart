@@ -4,7 +4,10 @@ class Signalement {
   final String prefecture;
   final String centreSante;
   final String region;
-  final String nature; // 'normal', 'urgent', 'critique'
+  final String nature; // 'normal', 'urgent', 'critique' (gravité)
+  final String groupe; // ex: 'Accès et Disponibilité des Services'
+  final String? categorieId; // FK vers categories.id, null si catégorie supprimée depuis
+  final String categorieLibelle; // dénormalisé pour affichage/stats sans jointure
   final String description;
   final DateTime? dateIncident;
   final DateTime soumisLe;
@@ -20,6 +23,9 @@ class Signalement {
     required this.centreSante,
     required this.region,
     required this.nature,
+    required this.groupe,
+    this.categorieId,
+    required this.categorieLibelle,
     required this.description,
     this.dateIncident,
     required this.soumisLe,
@@ -37,6 +43,9 @@ class Signalement {
       centreSante: json['centre_sante'],
       region: json['region'],
       nature: json['nature'],
+      groupe: json['groupe'] ?? '',
+      categorieId: json['categorie_id'],
+      categorieLibelle: json['categorie_libelle'] ?? '',
       description: json['description'],
       dateIncident: json['date_incident'] != null ? DateTime.parse(json['date_incident']) : null,
       soumisLe: DateTime.parse(json['soumis_le']),
@@ -53,6 +62,9 @@ class Signalement {
     'centre_sante': centreSante,
     'region': region,
     'nature': nature,
+    'groupe': groupe,
+    'categorie_id': categorieId,
+    'categorie_libelle': categorieLibelle,
     'description': description,
     'date_incident': dateIncident?.toIso8601String(),
     'soumis_le': soumisLe.toIso8601String(),
