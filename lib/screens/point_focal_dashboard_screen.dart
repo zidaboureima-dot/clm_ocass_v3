@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/signalement_service.dart';
 import '../theme/app_colors.dart';
 import 'signalement_detail_screen.dart';
+import 'change_password_screen.dart';
 import 'stats_body.dart';
 
 class PointFocalDashboardScreen extends StatefulWidget {
@@ -77,6 +78,15 @@ class _PointFocalDashboardScreenState extends State<PointFocalDashboardScreen> {
                     ),
                   ),
                 ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.lock_outline),
+            tooltip: 'Changer le mot de passe',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
               );
             },
           ),

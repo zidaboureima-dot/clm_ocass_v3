@@ -6,8 +6,10 @@ import '../services/auth_service.dart';
 import '../services/message_vocal_service.dart';
 import '../services/signalement_service.dart';
 import '../theme/app_colors.dart';
+import 'admin_accounts_tab.dart';
 import 'admin_categories_tab.dart';
 import 'admin_messages_vocaux_tab.dart';
+import 'change_password_screen.dart';
 import 'signalement_detail_screen.dart';
 import 'stats_body.dart';
 
@@ -64,15 +66,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Espace administrateur'),
           bottom: TabBar(
+            isScrollable: true,
             tabs: [
               const Tab(text: 'Signalements'),
               const Tab(text: 'Catégories'),
               const Tab(text: 'Statistiques'),
+              const Tab(text: 'Comptes'),
               Tab(
                 child: StreamBuilder(
                   stream: MessageVocalService().streamMessagesNonTraites(),
@@ -229,6 +233,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               stream: SignalementService().streamToutesSignalements(),
               description: 'Vue nationale, toutes régions confondues.',
             ),
+            const AdminAccountsTab(),
             AdminMessagesVocauxTab(adminUid: widget.profil.id),
           ],
         ),

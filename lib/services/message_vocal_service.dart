@@ -22,7 +22,6 @@ class MessageVocalService {
       await SupabaseConfig.client.storage.from(_bucket).upload(
             chemin,
             fichier,
-            fileOptions: FileOptions(upsert: true),
           );
       await SupabaseConfig.client.from('messages_vocaux_bruts').insert({
         'chemin_stockage': chemin,

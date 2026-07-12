@@ -22,7 +22,6 @@ class AudioService {
       await SupabaseConfig.client.storage.from(_bucket).upload(
             chemin,
             fichier,
-            fileOptions: FileOptions(upsert: true),
           );
       await SupabaseConfig.client.from('audios').insert({
         'signalement_id': signalementId,
