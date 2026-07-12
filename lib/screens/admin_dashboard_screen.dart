@@ -4,11 +4,13 @@ import '../models/signalement_model.dart';
 import '../models/user_profile_model.dart';
 import '../services/auth_service.dart';
 import '../services/message_vocal_service.dart';
+import '../services/photo_brute_service.dart';
 import '../services/signalement_service.dart';
 import '../theme/app_colors.dart';
 import 'admin_accounts_tab.dart';
 import 'admin_categories_tab.dart';
 import 'admin_messages_vocaux_tab.dart';
+import 'admin_photos_tab.dart';
 import 'change_password_screen.dart';
 import 'signalement_detail_screen.dart';
 import 'stats_body.dart';
@@ -66,7 +68,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Espace administrateur'),
@@ -98,9 +100,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   },
                 ),
               ),
+              Tab(
+                child: StreamBuilder(
+                  stream: PhotoBruteService().streamPhotosNonTraitees(),
+                  builder: (context, snapshot) {
+                    final n = snapshot.data?.length ?? 0;
+                    if (n == 0) return const Text('Photos');
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Photos'),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(color: AppColors.rouge, borderRadius: BorderRadius.circular(10)),
+                          child: Text('$n', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ],
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.lock_outline),
+              tooltip: 'Changer le mot de passe',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.logout),
               tooltip: 'Déconnexion',
@@ -235,6 +267,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
             const AdminAccountsTab(),
             AdminMessagesVocauxTab(adminUid: widget.profil.id),
+            AdminPhotosTab(adminUid: widget.profil.id),
           ],
         ),
       ),

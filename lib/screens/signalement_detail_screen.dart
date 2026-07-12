@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../models/annotation_model.dart';
+import '../models/audio_model.dart';
 import '../models/signalement_model.dart';
 import '../models/user_profile_model.dart';
 import '../services/annotation_service.dart';
+import '../services/audio_service.dart';
+import '../models/photo_model.dart';
+import '../services/photo_service.dart';
 import '../services/signalement_service.dart';
 import '../services/user_service.dart';
 import '../theme/app_colors.dart';
@@ -10,6 +15,7 @@ import '../theme/app_colors.dart';
 class SignalementDetailScreen extends StatefulWidget {
   final Signalement signalement;
   final UserProfile profil;
+
   final bool peutAssigner;
 
   const SignalementDetailScreen({
@@ -35,6 +41,16 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
   String? _focalSelectionneUid;
   bool _assignationEnCours = false;
 
+  AudioSignalement? _audio;
+  bool _chargementAudio = true;
+  final _player = AudioPlayer();
+  bool _lectureAudioEnCours = false;
+  bool _chargementLecture = false;
+
+  PhotoSignalement? _photo;
+  bool _chargementPhoto = true;
+  String? _urlPhoto;
+
   static const _statuts = ['nouveau', 'en_cours', 'traite', 'cloture'];
   static const _libellesStatuts = {
     'nouveau': 'Nouveau',
@@ -48,11 +64,59 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
     super.initState();
     _statutActuel = widget.signalement.statut;
     if (widget.peutAssigner) _chargerPointsFocaux();
+    _chargerAudio();
+    _chargerPhoto();
+  }
+
+  Future<void> _chargerPhoto() async {
+    final photo = await PhotoService().obtenirPhotoPourSignalement(widget.signalement.id!);
+    if (photo == null) {
+      if (!mounted) return;
+      setState(() => _chargementPhoto = false);
+      return;
+    }
+    final url = await PhotoService().obtenirUrlSignee(photo.cheminStockage);
+    if (!mounted) return;
+    setState(() {
+      _photo = photo;
+      _urlPhoto = url;
+      _chargementPhoto = false;
+    });
+  }
+
+  Future<void> _chargerAudio() async {
+    final audio = await AudioService().obtenirAudioPourSignalement(widget.signalement.id!);
+    if (!mounted) return;
+    setState(() {
+      _audio = audio;
+      _chargementAudio = false;
+    });
+  }
+
+  Future<void> _ecouterAudio() async {
+    if (_audio == null) return;
+    setState(() => _chargementLecture = true);
+    try {
+      final url = await AudioService().obtenirUrlSignee(_audio!.cheminStockage);
+      setState(() {
+        _chargementLecture = false;
+        _lectureAudioEnCours = true;
+      });
+      await _player.play(UrlSource(url));
+      _player.onPlayerComplete.first.then((_) {
+        if (mounted) setState(() => _lectureAudioEnCours = false);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _chargementLecture = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lecture audio : $e')));
+    }
   }
 
   @override
   void dispose() {
     _annotationController.dispose();
+    _player.dispose();
     super.dispose();
   }
 
@@ -191,6 +255,75 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
                 Text('${s.groupe} · ${s.categorieLibelle}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Text(s.description, style: const TextStyle(height: 1.5)),
+                if (_chargementAudio)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: LinearProgressIndicator(),
+                  )
+                else if (_audio != null) ...[
+                  const SizedBox(height: 10),
+                  InkWell(
+                    onTap: (_chargementLecture || _lectureAudioEnCours) ? null : _ecouterAudio,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: AppColors.vertPrimaire),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          (_chargementLecture)
+                              ? const SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Icon(
+                                  _lectureAudioEnCours ? Icons.volume_up : Icons.play_arrow,
+                                  color: AppColors.vertPrimaire,
+                                  size: 20,
+                                ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _lectureAudioEnCours ? 'Lecture en cours…' : 'Écouter le message vocal (${_audio!.dureeSecondes ?? 0} s)',
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.vertPrimaire),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                if (_chargementPhoto)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: LinearProgressIndicator(),
+                  )
+                else if (_urlPhoto != null) ...[
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => Scaffold(
+                            appBar: AppBar(title: const Text('Photo')),
+                            backgroundColor: Colors.black,
+                            body: Center(
+                              child: InteractiveViewer(
+                                child: Image.network(_urlPhoto!),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(_urlPhoto!, height: 160, width: double.infinity, fit: BoxFit.cover),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -216,8 +349,8 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
               const LinearProgressIndicator()
             else if (_pointsFocaux == null || _pointsFocaux!.isEmpty)
               const Text(
-                'Aucun point focal actif enregistré pour cette préfecture.',
-                style: TextStyle(color: AppColors.grisTexte, fontSize: 13),
+                'Aucun point focal actif pour cette préfecture. Vous pouvez traiter ce signalement vous-même : ajustez le statut et ajoutez vos annotations ci-dessous.',
+                style: TextStyle(color: AppColors.grisTexte, fontSize: 13, height: 1.4),
               )
             else ...[
               DropdownButtonFormField<String>(

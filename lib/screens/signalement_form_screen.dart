@@ -6,9 +6,11 @@ import '../models/categorie_model.dart';
 import '../models/signalement_model.dart';
 import '../services/audio_service.dart';
 import '../services/categorie_service.dart';
+import '../services/photo_service.dart';
 import '../services/signalement_service.dart';
 import '../theme/app_colors.dart';
 import 'audio_recorder_field.dart';
+import 'photo_picker_field.dart';
 
 class SignalementFormScreen extends StatefulWidget {
   const SignalementFormScreen({super.key});
@@ -37,6 +39,7 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
   DateTime? _dateIncident;
   File? _fichierAudio;
   int? _dureeAudioSecondes;
+  File? _fichierPhoto;
 
   final _formKeyEtape1 = GlobalKey<FormState>();
   final _formKeyEtape2 = GlobalKey<FormState>();
@@ -122,6 +125,20 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Signalement envoyé, mais l\'audio n\'a pas pu être joint : $e')),
+            );
+          }
+        }
+      }
+      if (_fichierPhoto != null) {
+        try {
+          await PhotoService().uploaderPhoto(
+            signalementId: idSignalement,
+            fichier: _fichierPhoto!,
+          );
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Signalement envoyé, mais la photo n\'a pas pu être jointe : $e')),
             );
           }
         }
@@ -227,6 +244,7 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: _region,
                     decoration: const InputDecoration(labelText: 'Région'),
                     items: RegionsPrefectures.regions
@@ -242,6 +260,7 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: _prefecture,
                     decoration: const InputDecoration(labelText: 'Préfecture / Commune'),
                     items: RegionsPrefectures.prefecturesDe(_region ?? '')
@@ -284,6 +303,7 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
                     const Text('Catégorie du dysfonctionnement', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: _groupeSelectionne,
                       decoration: const InputDecoration(labelText: 'Groupe'),
                       items: _categoriesParGroupe!.keys
@@ -299,6 +319,7 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<Categorie>(
+                      isExpanded: true,
                       initialValue: _categorieSelectionnee,
                       decoration: const InputDecoration(labelText: 'Catégorie précise'),
                       items: (_categoriesParGroupe![_groupeSelectionne ?? ''] ?? [])
@@ -357,6 +378,10 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
                         _dureeAudioSecondes = duree;
                       });
                     },
+                  ),
+                  const SizedBox(height: 12),
+                  PhotoPickerField(
+                    onSelection: (fichier) => setState(() => _fichierPhoto = fichier),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -419,6 +444,7 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
                   _LigneRecap('Gravité', _nature),
                   _LigneRecap('Description', _descriptionController.text.isEmpty ? '(voir message vocal)' : _descriptionController.text),
                   if (_fichierAudio != null) _LigneRecap('Message vocal', 'Joint (${_dureeAudioSecondes ?? 0} s)'),
+                  if (_fichierPhoto != null) const _LigneRecap('Photo', 'Jointe'),
                   const SizedBox(height: 8),
                   const Text(
                     'Ce signalement est anonyme : aucune information permettant de vous identifier n\'est collectée.',
