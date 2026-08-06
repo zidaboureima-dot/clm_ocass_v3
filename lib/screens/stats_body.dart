@@ -56,13 +56,23 @@ class StatsBody extends StatelessWidget {
     return StreamBuilder<List<Signalement>>(
       stream: stream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.hasError) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Statistiques momentanément indisponibles.',
+                style: TextStyle(color: AppColors.grisTexte),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (snapshot.hasError) {
-          return Center(child: Text('Erreur : ${snapshot.error}'));
-        }
-        final signalements = snapshot.data!;
+        final signalements = snapshot.data ?? [];
         if (signalements.isEmpty) {
           return const Center(
             child: Text('Aucun signalement pour ce périmètre.', style: TextStyle(color: AppColors.grisTexte)),

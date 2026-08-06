@@ -42,7 +42,13 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    statsStream = SignalementService().streamSignalements();
+    _chargerStats();
+  }
+
+  void _chargerStats() {
+    setState(() {
+      statsStream = SignalementService().streamSignalements();
+    });
   }
 
   @override
@@ -90,20 +96,41 @@ class _HomePageState extends State<HomePage> {
             StreamBuilder<List<Map<String, dynamic>>>(
               stream: statsStream,
               builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
                 if (snapshot.hasError) {
-                  return const Text('Erreur chargement stats');
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Statistiques momentanément indisponibles',
+                          style: TextStyle(color: AppColors.grisTexte, fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: const Text('Réessayer'),
+                          onPressed: _chargerStats,
+                        ),
+                      ],
+                    ),
+                  );
                 }
-                final stats = SignalementService().calculerStats(snapshot.data!);
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                final stats = SignalementService().calculerStats(snapshot.data ?? []);
                 return GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 2,
                   mainAxisSpacing: 6,
                   crossAxisSpacing: 6,
-                  childAspectRatio: 2.7,
+                  childAspectRatio: 2.3,
                   children: [
                     _StatCard('Total global', stats['total'] ?? 0, AppColors.vertPrimaire),
                     _StatCard('En cours', stats['en_cours'] ?? 0, AppColors.orange),
@@ -197,7 +224,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         border: Border.all(color: color.withValues(alpha: 0.3)),
@@ -205,15 +232,21 @@ class _StatCard extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value.toString(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-          const SizedBox(height: 1),
           Text(
-            label,
-            style: const TextStyle(fontSize: 9, color: AppColors.grisTexte),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            value.toString(),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+          ),
+          const SizedBox(height: 2),
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 9, color: AppColors.grisTexte),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
