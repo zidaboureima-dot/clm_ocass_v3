@@ -7,7 +7,6 @@ import '../models/message_vocal_brut_model.dart';
 import '../models/signalement_model.dart';
 import '../services/annotation_service.dart';
 import '../models/annotation_model.dart';
-import '../services/audio_service.dart';
 import '../services/categorie_service.dart';
 import '../services/message_vocal_service.dart';
 import '../services/signalement_service.dart';
@@ -114,11 +113,6 @@ class _TraiterMessageVocalScreenState extends State<TraiterMessageVocalScreen> {
         statut: 'nouveau',
       );
       await SignalementService().creerSignalement(signalement);
-      await AudioService().lierAudioExistant(
-        signalementId: idSignalement,
-        cheminStockage: widget.message.cheminStockage,
-        dureeSecondes: widget.message.dureeSecondes,
-      );
       await AnnotationService().ajouterAnnotation(
         Annotation(
           signalementId: idSignalement,
@@ -128,10 +122,18 @@ class _TraiterMessageVocalScreenState extends State<TraiterMessageVocalScreen> {
           createdAt: DateTime.now(),
         ),
       );
-      await MessageVocalService().marquerTraite(messageId: widget.message.id, signalementId: idSignalement);
+      // Confidentialité (Modèle A) : suppression de l'audio brut au moment
+      // de la transcription. Le fichier est détruit du stockage et le
+      // message est marqué traité. Aucun audio n'est conservé ni lié au
+      // signalement, il n'est pas réécoutable par le superviseur.
+      await MessageVocalService().marquerTraite(
+        messageId: widget.message.id,
+        signalementId: idSignalement,
+        cheminStockage: widget.message.cheminStockage,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signalement créé et transmis au superviseur de la région.')),
+        const SnackBar(content: Text('Signalement créé et transmis au superviseur. Enregistrement audio supprimé.')),
       );
       Navigator.of(context).pop();
     } catch (e) {
