@@ -1,4 +1,5 @@
 import '../config/supabase_config.dart';
+import '../models/stats_agregees_model.dart';
 import '../models/signalement_model.dart';
 
 class SignalementService {
@@ -93,7 +94,19 @@ class SignalementService {
       throw Exception('Erreur assignation: $e');
     }
   }
-
+/// Lit la vue d'agrégats publique (comptes uniquement, aucune ligne de
+  /// signalement exposée) et renvoie un objet structuré prêt à afficher.
+  Future<StatsAgregees> obtenirStatsPubliques() async {
+    try {
+      final response = await SupabaseConfig.client
+          .from('stats_publiques')
+          .select();
+      final lignes = (response as List).cast<Map<String, dynamic>>();
+      return StatsAgregees.depuisLignesVue(lignes);
+    } catch (e) {
+      throw Exception('Erreur récupération statistiques: $e');
+    }
+  }
   Map<String, int> calculerStats(List<Map<String, dynamic>> lignes) {
     return {
       'total': lignes.length,

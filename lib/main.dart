@@ -8,6 +8,7 @@ import 'screens/message_vocal_screen.dart';
 import 'screens/photo_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/public_stats_screen.dart';
+import 'models/stats_agregees_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +38,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Stream<List<Map<String, dynamic>>> statsStream;
+  late Future<StatsAgregees> _statsFuture;
 
   @override
   void initState() {
@@ -47,7 +48,7 @@ class _HomePageState extends State<HomePage> {
 
   void _chargerStats() {
     setState(() {
-      statsStream = SignalementService().streamSignalements();
+      _statsFuture = SignalementService().obtenirStatsPubliques();
     });
   }
 
@@ -93,8 +94,8 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.vertFonce),
             ),
             const SizedBox(height: 6),
-            StreamBuilder<List<Map<String, dynamic>>>(
-              stream: statsStream,
+            FutureBuilder<StatsAgregees>(
+              future: _statsFuture,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Padding(
@@ -116,14 +117,13 @@ class _HomePageState extends State<HomePage> {
                     ),
                   );
                 }
-                if (snapshot.connectionState == ConnectionState.waiting &&
-                    !snapshot.hasData) {
+                if (!snapshot.hasData) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
-                final stats = SignalementService().calculerStats(snapshot.data ?? []);
+                final stats = snapshot.data!;
                 return GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -132,10 +132,10 @@ class _HomePageState extends State<HomePage> {
                   crossAxisSpacing: 6,
                   childAspectRatio: 2.3,
                   children: [
-                    _StatCard('Total global', stats['total'] ?? 0, AppColors.vertPrimaire),
-                    _StatCard('En cours', stats['en_cours'] ?? 0, AppColors.orange),
-                    _StatCard('Traités', stats['traites'] ?? 0, AppColors.statusTraite),
-                    _StatCard('Clôturés', stats['clotures'] ?? 0, AppColors.statusCloture),
+                    _StatCard('Total global', stats.total, AppColors.vertPrimaire),
+                    _StatCard('En cours', stats.parStatut['en_cours'] ?? 0, AppColors.orange),
+                    _StatCard('Traités', stats.parStatut['traite'] ?? 0, AppColors.statusTraite),
+                    _StatCard('Clôturés', stats.parStatut['cloture'] ?? 0, AppColors.statusCloture),
                   ],
                 );
               },

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/signalement_service.dart';
-import 'stats_body.dart';
+import 'stats_body_public.dart';
 
 class PublicStatsScreen extends StatelessWidget {
   const PublicStatsScreen({super.key});
@@ -9,8 +8,7 @@ class PublicStatsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Statistiques publiques')),
-      body: StatsBody(
-        stream: SignalementService().streamToutesSignalements(),
+      body: const StatsBodyPublic(
         description:
             'Données agrégées, aucune information identifiante. Ces statistiques reflètent des signalements anonymes soumis par les communautés, à l\'échelle nationale.',
       ),
