@@ -6,6 +6,8 @@ class UserProfile {
   final String? prefecture;
   final String nom;
   final bool actif;
+  final String? telephone;
+  final String? whatsapp;
 
   UserProfile({
     required this.id,
@@ -15,6 +17,8 @@ class UserProfile {
     this.prefecture,
     required this.nom,
     required this.actif,
+    this.telephone,
+    this.whatsapp,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,8 @@ class UserProfile {
       prefecture: json['prefecture'],
       nom: json['nom'],
       actif: json['actif'] ?? true,
+      telephone: json['telephone'],
+      whatsapp: json['whatsapp'],
     );
   }
 
@@ -36,5 +42,7 @@ class UserProfile {
     'prefecture': prefecture,
     'nom': nom,
     'actif': actif,
+    'telephone': telephone,
+    'whatsapp': whatsapp,
   };
 }

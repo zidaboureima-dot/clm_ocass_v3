@@ -6,6 +6,7 @@ import '../services/annotation_service.dart';
 import '../services/photo_service.dart';
 import '../services/signalement_service.dart';
 import '../services/user_service.dart';
+import '../widgets/contacts_chaine_widget.dart';
 import '../theme/app_colors.dart';
 
 class SignalementDetailScreen extends StatefulWidget {
@@ -291,6 +292,10 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
               ),
             ],
           ],
+          const SizedBox(height: 24),
+          const Text('Contacter les acteurs du cas', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.vertFonce)),
+          const SizedBox(height: 8),
+          ContactsChaineWidget(signalement: s, profil: widget.profil),
           const SizedBox(height: 24),
           const Text('Annotations', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.vertFonce)),
           const SizedBox(height: 8),
