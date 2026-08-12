@@ -1,6 +1,8 @@
 import '../config/supabase_config.dart';
 import '../models/stats_agregees_model.dart';
 import '../models/signalement_model.dart';
+import 'marqueur_appareil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SignalementService {
   static final SignalementService _instance = SignalementService._internal();
@@ -10,13 +12,22 @@ class SignalementService {
   factory SignalementService() => _instance;
 
   Future<void> creerSignalement(Signalement signalement) async {
-    try {
-      final data = signalement.toJson();
-      await SupabaseConfig.client.from('signalements').insert(data);
-    } catch (e) {
-      throw Exception('Erreur creation: $e');
+  try {
+    final data = signalement.toJson();
+    final marqueur = await obtenirMarqueurAppareil();
+    await SupabaseConfig.client.rpc('soumettre_signalement_anonyme', params: {
+      'p_contenu': data,
+      'p_marqueur': marqueur,
+    });
+  } on PostgrestException catch (e) {
+    if (e.message.contains('RATE_LIMIT')) {
+      throw Exception('Trop de dépôts depuis cet appareil. Réessayez dans quelques minutes.');
     }
+    throw Exception('Erreur creation: ${e.message}');
+  } catch (e) {
+    throw Exception('Erreur creation: $e');
   }
+}
 
   Future<List<Signalement>> obtenirSignalements() async {
     try {
