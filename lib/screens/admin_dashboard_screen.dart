@@ -14,6 +14,8 @@ import 'admin_photos_tab.dart';
 import 'change_password_screen.dart';
 import 'signalement_detail_screen.dart';
 import 'stats_body.dart';
+import 'admin_demandes_reset_tab.dart';
+import '../services/demande_reset_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   final UserProfile profil;
@@ -68,7 +70,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 6,
+      length: 7,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Espace administrateur'),
@@ -80,6 +82,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const Tab(text: 'Statistiques'),
               const Tab(text: 'Comptes'),
               Tab(
+                child: StreamBuilder(
+                  stream: DemandeResetService().streamDemandesEnAttente(),
+                  builder: (context, snapshot) {
+                    final n = snapshot.data?.length ?? 0;
+                    if (n == 0) return const Text('Réinitialisations');
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Réinitialisations'),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(color: AppColors.rouge, borderRadius: BorderRadius.circular(10)),
+                          child: Text('$n', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+                Tab(
                 child: StreamBuilder(
                   stream: MessageVocalService().streamMessagesNonTraites(),
                   builder: (context, snapshot) {
@@ -266,6 +289,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               description: 'Vue nationale, toutes régions confondues.',
             ),
             const AdminAccountsTab(),
+            const AdminDemandesResetTab(),
             AdminMessagesVocauxTab(adminUid: widget.profil.id),
             AdminPhotosTab(adminUid: widget.profil.id),
           ],

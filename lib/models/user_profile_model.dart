@@ -6,6 +6,7 @@ class UserProfile {
   final String? prefecture;
   final String nom;
   final bool actif;
+  final bool doitChangerMdp;
   final String? telephone;
   final String? whatsapp;
 
@@ -17,6 +18,7 @@ class UserProfile {
     this.prefecture,
     required this.nom,
     required this.actif,
+    this.doitChangerMdp = false,
     this.telephone,
     this.whatsapp,
   });
@@ -30,6 +32,7 @@ class UserProfile {
       prefecture: json['prefecture'],
       nom: json['nom'],
       actif: json['actif'] ?? true,
+      doitChangerMdp: json['doit_changer_mdp'] ?? false,
       telephone: json['telephone'],
       whatsapp: json['whatsapp'],
     );
