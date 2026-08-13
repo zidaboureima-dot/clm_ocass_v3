@@ -21,6 +21,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _confirmationController = TextEditingController();
   bool _envoiEnCours = false;
   String? _erreur;
+  bool _masquerNouveau = true;
+  bool _masquerConfirmation = true;
 
   @override
   void dispose() {
@@ -83,13 +85,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           title: const Text('Changer le mot de passe'),
           automaticallyImplyLeading: !widget.force,
         ),
-        body: Padding(
+        body: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 8),
                 const Icon(Icons.lock_outline, size: 48, color: AppColors.vertPrimaire),
                 const SizedBox(height: 16),
                 const Text(
@@ -100,15 +103,27 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _nouveauController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Nouveau mot de passe'),
+                  obscureText: _masquerNouveau,
+                  decoration: InputDecoration(
+                    labelText: 'Nouveau mot de passe',
+                    suffixIcon: IconButton(
+                      icon: Icon(_masquerNouveau ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _masquerNouveau = !_masquerNouveau),
+                    ),
+                  ),
                   validator: (v) => (v == null || v.length < 6) ? 'Six caractères minimum' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmationController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Confirmer le mot de passe'),
+                  obscureText: _masquerConfirmation,
+                  decoration: InputDecoration(
+                    labelText: 'Confirmer le mot de passe',
+                    suffixIcon: IconButton(
+                      icon: Icon(_masquerConfirmation ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _masquerConfirmation = !_masquerConfirmation),
+                    ),
+                  ),
                   validator: (v) => (v != _nouveauController.text) ? 'Les mots de passe ne correspondent pas' : null,
                 ),
                 if (_erreur != null) ...[

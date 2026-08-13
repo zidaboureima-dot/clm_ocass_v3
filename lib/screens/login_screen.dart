@@ -21,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _motDePasseController = TextEditingController();
   bool _connexionEnCours = false;
   String? _erreur;
+  bool _masquerMotDePasse = true;
 
   @override
   void dispose() {
@@ -223,8 +224,14 @@ Future<void> _ouvrirDialogueMotDePasseOublie() async {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _motDePasseController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Mot de passe'),
+                obscureText: _masquerMotDePasse,
+                decoration: InputDecoration(
+                  labelText: 'Mot de passe',
+                  suffixIcon: IconButton(
+                    icon: Icon(_masquerMotDePasse ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setState(() => _masquerMotDePasse = !_masquerMotDePasse),
+                  ),
+                ),
                 validator: (v) => (v == null || v.isEmpty) ? 'Indiquez votre mot de passe' : null,
               ),
               if (_erreur != null) ...[
