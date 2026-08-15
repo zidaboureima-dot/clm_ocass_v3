@@ -133,7 +133,46 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
       if (mounted) setState(() => _majStatutEnCours = false);
     }
   }
+// Retourne les boutons d'action de transition autorisés pour le rôle
+  // courant depuis le statut courant. Miroir du trigger de validation :
+  //   - point_focal : aucun (lecture seule pure)
+  //   - superviseur : nouveau->en_cours, en_cours->traite
+  //   - admin       : nouveau->en_cours, en_cours->traite, traite->cloture
+  // La base refuse de toute façon toute transition non autorisée.
+  List<Widget> _boutonsActionStatut() {
+    final role = widget.profil.role;
+    final actions = <({String cible, String libelle})>[];
 
+    if (role == 'superviseur' || role == 'admin') {
+      if (_statutActuel == 'nouveau') {
+        actions.add((cible: 'en_cours', libelle: 'Marquer en cours'));
+      } else if (_statutActuel == 'en_cours') {
+        actions.add((cible: 'traite', libelle: 'Marquer traité'));
+      }
+    }
+    if (role == 'admin' && _statutActuel == 'traite') {
+      actions.add((cible: 'cloture', libelle: 'Clôturer'));
+    }
+
+    if (actions.isEmpty) return const [];
+
+    return [
+      const SizedBox(height: 12),
+      ...actions.map((a) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: FilledButton(
+              onPressed: _majStatutEnCours ? null : () => _changerStatut(a.cible),
+              child: _majStatutEnCours
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(a.libelle),
+            ),
+          )),
+    ];
+  }
   Future<void> _assigner() async {
     if (_focalSelectionneUid == null) return;
     setState(() => _assignationEnCours = true);
@@ -248,17 +287,26 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
           const SizedBox(height: 20),
           const Text('Statut', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.vertFonce)),
           const SizedBox(height: 8),
+          // Progression en LECTURE SEULE : les 4 étapes, l'étape courante mise
+          // en valeur. Aucun clic ici — l'action passe par _boutonsActionStatut().
           Wrap(
             spacing: 8,
             children: _statuts.map((statut) {
               final selectionne = statut == _statutActuel;
-              return ChoiceChip(
+              return Chip(
                 label: Text(_libellesStatuts[statut]!),
-                selected: selectionne,
-                onSelected: _majStatutEnCours ? null : (_) => _changerStatut(statut),
+                backgroundColor: selectionne ? AppColors.vertFonce : AppColors.grisLeger,
+                labelStyle: TextStyle(
+                  color: selectionne ? Colors.white : AppColors.grisTexte,
+                  fontWeight: selectionne ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 12,
+                ),
               );
             }).toList(),
           ),
+          // Boutons d'action filtrés par rôle (fidèle au trigger
+          // trg_valider_transition_statut). La base reste l'autorité finale.
+          ..._boutonsActionStatut(),
           if (widget.peutAssigner) ...[
             const SizedBox(height: 20),
             const Text('Assigner à un point focal', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.vertFonce)),
