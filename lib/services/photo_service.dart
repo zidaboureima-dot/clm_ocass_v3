@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../models/photo_model.dart';
+import 'image_sanitizer.dart';
 
 class PhotoService {
   static final PhotoService _instance = PhotoService._internal();
@@ -18,7 +19,8 @@ class PhotoService {
   }) async {
     try {
       final chemin = '$signalementId/photo.jpg';
-      await SupabaseConfig.client.storage.from(_bucket).upload(chemin, fichier);
+      final fichierNettoye = await ImageSanitizer.nettoyer(fichier);
+      await SupabaseConfig.client.storage.from(_bucket).upload(chemin, fichierNettoye);
       await SupabaseConfig.client.from('photos').insert({
         'signalement_id': signalementId,
         'chemin_stockage': chemin,

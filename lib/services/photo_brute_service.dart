@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../models/photo_brute_model.dart';
+import 'image_sanitizer.dart';
 
 class PhotoBruteService {
   static final PhotoBruteService _instance = PhotoBruteService._internal();
@@ -16,7 +17,8 @@ class PhotoBruteService {
     try {
       final id = DateTime.now().millisecondsSinceEpoch.toString();
       final chemin = 'bruts/$id/photo.jpg';
-      await SupabaseConfig.client.storage.from(_bucket).upload(chemin, fichier);
+      final fichierNettoye = await ImageSanitizer.nettoyer(fichier);
+      await SupabaseConfig.client.storage.from(_bucket).upload(chemin, fichierNettoye);
       await SupabaseConfig.client.from('photos_brutes').insert({
         'chemin_stockage': chemin,
         'statut': 'nouveau',
