@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
     <application
-        android:label="clm_ocass_v3"
+        android:label="CLM-OCASS Guinée"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
