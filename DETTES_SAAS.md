@@ -41,7 +41,7 @@ tenant du destinataire / du signalement concerné.
 (SPF/DKIM). Aujourd'hui un seul domaine (`clm-ocass-guinee.org`). Chaque
 nouveau pays devra faire vérifier son propre domaine AVANT de pouvoir envoyer.
 
-**Cible.** Faire de la vérification de domaine Resient (SPF/DKIM DNS) une étape
+**Cible.** Faire de la vérification de domaine Resend (SPF/DKIM DNS) une étape
 **obligatoire et documentée** de l'onboarding pays. Découvert en production via
 un HTTP 403 « domain not verified ». La propagation DNS est une dépendance
 bloquante, à traiter comme prérequis, pas comme un détail.
