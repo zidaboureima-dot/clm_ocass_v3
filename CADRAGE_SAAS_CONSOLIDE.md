@@ -67,13 +67,13 @@ Vulnérabilités et points fermés, vérifiés et versionnés :
 
 ---
 
-## 3. Chantier restant — Phase ii (publication mobile) : À ENGAGER
+## 3. Chantier restant — Phase ii (publication mobile) : EN COURS
 
 Nature différente de la phase i : moins de code, plus de préparation
 documentaire et administrative. La cohérence déclaré/réel est la contrainte
 majeure — une divergence est un motif de rejet, puis de suspension.
 
-### 3.1 Documents à produire
+### 3.1 Documents à produire — À FAIRE
 - **Politique de confidentialité** (page publique) : données traitées, finalité,
   durée de conservation, absence de données personnelles et de géolocalisation.
   À rédiger sur la base du comportement réel désormais vérifié (pas d'EXIF, pas
@@ -88,11 +88,36 @@ majeure — une divergence est un motif de rejet, puis de suspension.
   Aucune autre permission n'est demandée (manifeste minimal vérifié).
 
 ### 3.2 Actions techniques préalables
-- **Renommer `android:label`** : actuellement `clm_ocass_v3` (nom technique).
-  Remplacer par un nom présentable (ex. « CLM-OCASS Guinée ») avant soumission.
-- **Fiche du store** : descriptif, captures d'écran, catégorie, coordonnées de
-  support et de responsable des données.
-- **Tests fermés** : campagne à accès restreint avant ouverture au public.
+
+- **`android:label`** *(FAIT)* : `clm_ocass_v3` → « CLM-OCASS Guinée ».
+- **`applicationId` Android** *(FAIT)* : `com.example.clm_ocass_v3` (rejeté
+  d'office par Google Play) → `com.clmocass.app`, définitif, choisi sans
+  ancrage géographique en prévision de la cible multi-pays (§ 4). Irréversible
+  une fois publié.
+- **Signature release Android** *(CÂBLAGE FAIT — clé à générer localement)* :
+  le build release était signé avec la clé debug (non publiable). Le
+  `build.gradle.kts` lit désormais `android/key.properties` (non commité,
+  exclu de git) s'il existe, avec repli sur la clé debug sinon. Reste à faire,
+  sur la machine du développeur : générer le keystore avec `keytool` et
+  créer `android/key.properties` (voir historique de session pour la
+  commande exacte). Sans cette étape, `flutter build appbundle --release`
+  continue de signer avec la clé debug — non bloquant pour compiler, mais
+  bloquant pour publier.
+- **Icône de l'app** *(FAIT)* : logo Flutter par défaut → icône CLM-OCASS
+  (toutes densités Android, jeu complet iOS AppIcon dont le 1024×1024 sans
+  canal alpha requis par l'App Store).
+- **Cohérence iOS** *(FAIT)* : `CFBundleDisplayName` aligné sur « CLM-OCASS
+  Guinée » ; bundle identifier `com.example.clmOcassV3` → `com.clmocass.app`
+  (aligné sur l'`applicationId` Android) ; ajout des usage descriptions
+  requises (`NSCameraUsageDescription`, `NSMicrophoneUsageDescription`,
+  `NSPhotoLibraryUsageDescription` — cette dernière découverte nécessaire car
+  `image_picker` est aussi utilisé en mode galerie, pas seulement caméra).
+  Sans ces clés, l'app crashe à la demande de permission sur iOS et Apple
+  rejette la soumission.
+- **Fiche du store** *(À FAIRE)* : descriptif, captures d'écran, catégorie,
+  coordonnées de support et de responsable des données.
+- **Tests fermés** *(À FAIRE)* : campagne à accès restreint avant ouverture au
+  public.
 
 ### 3.3 Point de vigilance transverse
 La déclaration de sûreté et la politique de confidentialité doivent dire
