@@ -17,9 +17,9 @@ CLM-OCASS Guinée est un dispositif de suivi dirigé par les communautés,
 permettant à toute personne de signaler un dysfonctionnement (dans le domaine
 sanitaire) auprès des responsables compétents, de manière anonyme.
 
-**Responsable du traitement :** [À COMPLÉTER — nom de l'entité ou de la
-personne responsable, et coordonnées de contact (email) pour toute question
-relative aux données personnelles]
+**Responsable du traitement :** le porteur du projet CLM-OCASS Guinée. Pour
+toute question relative aux données personnelles, contact :
+**info@sapsapservices.com**.
 
 ---
 
