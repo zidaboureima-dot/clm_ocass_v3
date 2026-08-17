@@ -1,4 +1,4 @@
-package com.example.clm_ocass_v3
+package com.clmocass.app
 
 import io.flutter.embedding.android.FlutterActivity
 
