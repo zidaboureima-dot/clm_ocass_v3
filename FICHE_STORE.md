@@ -59,8 +59,11 @@ signalement communautaire), moins précise sur le domaine.
 - **Email de contact / support :** info@sapsapservices.com
 - **Email dédié aux questions de données personnelles :** info@sapsapservices.com
   *(identique au contact support — cohérent avec `POLITIQUE_CONFIDENTIALITE.md`)*
-- **Site web / politique de confidentialité :** [À FOURNIR — voir §7]
-- **Téléphone (optionnel) :** [à toi de voir si tu veux en publier un]
+- **Site web / politique de confidentialité :** à héberger sur
+  `www.sapsapservices.com` (page prête : `politique-confidentialite.html`, à
+  déposer sur ce domaine — voir §7 pour l'URL finale exacte à confirmer).
+- **Téléphone :** +226 76 41 09 90 *(tel que fourni — voir vérification de
+  l'indicatif pays en §7)*
 
 ## 6. Classification du contenu (questionnaire Play Console)
 
@@ -75,19 +78,22 @@ plus basse (tout public).
 
 ## 7. Ce qu'il reste à fournir de ton côté
 
-Cette session cloud ne peut pas produire ces éléments (pas d'émulateur
-Android/iOS disponible, pas d'accès à un compte Play Console) :
-
 - **Captures d'écran réelles** : minimum 2 par format (téléphone au minimum,
   idéalement aussi tablette 7" et 10" si l'app les supporte). À prendre
-  depuis un appareil ou un émulateur, une fois l'app compilée en local.
-- **Visuel graphique (feature graphic)** : image 1024×500, affichée en haut
-  de la fiche store. Je peux la produire à partir de l'icône déjà livrée
-  (`ic_launcher`) si tu veux — dis-le-moi et je m'en occupe séparément,
-  c'est un travail de design qui mérite son propre point.
-- **URL publique de la politique de confidentialité** : `POLITIQUE_CONFIDENTIALITE.md`
-  existe dans le dépôt mais n'est pas encore accessible par une URL publique
-  — Play exige un lien web, pas un fichier de dépôt. Il faudra la publier sur
-  le site vitrine public ou une page dédiée, puis renseigner cette URL ici et
-  dans la Play Console.
-- **Décision sur le numéro de téléphone public** (optionnel côté Play).
+  depuis un appareil ou un émulateur, une fois l'app compilée en local — cette
+  session cloud n'a pas d'émulateur Android/iOS disponible pour les produire.
+- **Visuel graphique (feature graphic)** *(FAIT)* : `store_feature_graphic_1024x500.png`,
+  1024×500, généré à partir de l'icône livrée et des couleurs de marque déjà
+  utilisées. À valider ou faire ajuster.
+- **URL publique de la politique de confidentialité** *(page prête, dépôt à
+  faire de ton côté)* : `politique-confidentialite.html` est une page HTML
+  autonome, stylée, prête à être déposée sur `www.sapsapservices.com`. Une
+  fois en ligne, confirme-moi l'URL exacte (ex.
+  `https://www.sapsapservices.com/clm-ocass/politique-confidentialite.html`)
+  pour que je la reporte dans ce document et que tu la colles dans la Play
+  Console.
+- **Téléphone** *(à vérifier)* : tu as donné `+22676410990`. En le découpant,
+  ça correspond à l'indicatif **+226 (Burkina Faso)** suivi de `76410990` (8
+  chiffres, format burkinabè), pas à **+224 (Guinée)** — l'app étant
+  spécifiquement guinéenne, je voulais confirmer avant de le publier sur la
+  fiche store : c'est bien +226, ou une coquille pour +224&nbsp;76&nbsp;41&nbsp;09&nbsp;90 ?
