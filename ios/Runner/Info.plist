@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Clm Ocass V3</string>
+	<string>CLM-OCASS Guinée</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>CLM-OCASS utilise l'appareil photo pour joindre une photo-preuve à un signalement. Les métadonnées de localisation sont automatiquement retirées avant l'enregistrement.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>CLM-OCASS utilise le microphone pour permettre le dépôt d'un signalement vocal.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>CLM-OCASS utilise votre photothèque pour joindre une photo-preuve existante à un signalement. Les métadonnées de localisation sont automatiquement retirées avant l'enregistrement.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
