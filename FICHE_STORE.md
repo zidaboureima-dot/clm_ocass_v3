@@ -62,8 +62,7 @@ signalement communautaire), moins précise sur le domaine.
 - **Site web / politique de confidentialité :** à héberger sur
   `www.sapsapservices.com` (page prête : `politique-confidentialite.html`, à
   déposer sur ce domaine — voir §7 pour l'URL finale exacte à confirmer).
-- **Téléphone :** +226 76 41 09 90 *(tel que fourni — voir vérification de
-  l'indicatif pays en §7)*
+- **Téléphone :** +226 76 41 09 90 *(confirmé)*
 
 ## 6. Classification du contenu (questionnaire Play Console)
 
@@ -92,8 +91,4 @@ plus basse (tout public).
   `https://www.sapsapservices.com/clm-ocass/politique-confidentialite.html`)
   pour que je la reporte dans ce document et que tu la colles dans la Play
   Console.
-- **Téléphone** *(à vérifier)* : tu as donné `+22676410990`. En le découpant,
-  ça correspond à l'indicatif **+226 (Burkina Faso)** suivi de `76410990` (8
-  chiffres, format burkinabè), pas à **+224 (Guinée)** — l'app étant
-  spécifiquement guinéenne, je voulais confirmer avant de le publier sur la
-  fiche store : c'est bien +226, ou une coquille pour +224&nbsp;76&nbsp;41&nbsp;09&nbsp;90 ?
+- ~~**Téléphone** *(à vérifier)*~~ *(FAIT — confirmé)* : +226 76 41 09 90.
