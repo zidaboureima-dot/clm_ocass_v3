@@ -189,7 +189,32 @@ Externaliser hors du code, par tenant :
 - Le mapping est une **configuration versionnée par pays et par programme**,
   validée par pilote avec le programme national, jamais codée en dur.
 
-### 4.6 Directives — Durcissements et gouvernance à finir
+### 4.6 Directive — Distribution mobile : un build par pays contractant
+
+*(Clarification actée le 17 août 2026, en marge de la préparation du store
+Guinée.)* Le service backend est mutualisé (§4.1), mais **l'application
+mobile ne l'est pas** : chaque pays qui contracte reçoit son propre build et
+sa propre fiche sur chaque store, pas un accès à une app unique partagée.
+Conséquences concrètes pour l'industrialisation :
+
+- **Chaque pays a son propre `applicationId` / bundle identifier**, sa propre
+  fiche store, son propre nom affiché localisé (modèle : « CLM-OCASS
+  Guinée » — un futur déploiement serait p. ex. « CLM-OCASS Burkina Faso »,
+  jamais un nom panafricain générique). Techniquement inévitable : deux
+  fiches store ne peuvent de toute façon pas partager le même identifiant
+  d'app.
+- **Chaque pays a sa propre clé de signature** (keystore Android, certificat
+  iOS) — ne jamais réutiliser la clé d'un pays pour un autre.
+- Le code et la couche de configuration restent mutualisés (§4.3) : c'est le
+  **build** qui injecte le `pays_code`/`tenant_id` au moment de la
+  compilation (flavor Flutter ou `--dart-define`), pas une sélection de pays
+  à l'intérieur d'une app unique.
+- La checklist de publication store (politique de confidentialité,
+  déclaration de sûreté des données, fiche store, tests fermés — §3) est donc
+  **à rejouer intégralement pour chaque nouveau pays contractant**, pas une
+  démarche à faire une seule fois pour toutes les instances.
+
+### 4.7 Directives — Durcissements et gouvernance à finir
 - **Rate-limit des dépôts bruts** : passer `photos_brutes` et
   `messages_vocaux_bruts` par une RPC SECURITY DEFINER (modèle
   `soumettre_signalement_anonyme`) contrôlant les champs ET appliquant un
@@ -204,7 +229,7 @@ Externaliser hors du code, par tenant :
   automatique des résidus (média `traite` avec `chemin_stockage` non nul ;
   fichier de stockage sans ligne correspondante).
 
-### 4.7 Directive — Non-régression photo (déjà acquise, à préserver)
+### 4.8 Directive — Non-régression photo (déjà acquise, à préserver)
 Tout nouveau point d'upload de photo DOIT passer par `ImageSanitizer.nettoyer`
 avant `storage.upload`. Ne jamais uploader un fichier image brut : cela
 réintroduirait la fuite EXIF/GPS fermée en phase i.
