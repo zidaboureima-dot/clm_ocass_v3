@@ -1,6 +1,6 @@
 # Fiche du store — Google Play
 
-**Dernière mise à jour :** 17 août 2026
+**Dernière mise à jour :** 18 août 2026
 
 Contenu prêt à copier-coller dans la Play Console (Présence sur le store →
 Fiche Store principale). Ce qui ne peut pas être produit depuis cette session
@@ -60,8 +60,11 @@ signalement communautaire), moins précise sur le domaine.
 - **Email dédié aux questions de données personnelles :** info@sapsapservices.com
   *(identique au contact support — cohérent avec `POLITIQUE_CONFIDENTIALITE.md`)*
 - **Site web / politique de confidentialité :**
-  https://sapsapservices.com/clm-ocass/confidentialite
-- **Téléphone :** +226 76 41 09 90 *(confirmé)*
+  https://sapsapservices.com/clm-ocass/confidentialite — ⚠️ *voir §7 : le
+  contenu actuellement en ligne à cette adresse ne correspond pas au document
+  vérifié et ne doit pas être soumis tel quel.*
+- **Téléphone :** +226 76 41 09 90 *(confirmé côté fiche store — à
+  réconcilier avec le +224 61 42 67 911 affiché sur la page hébergée, voir §7)*
 
 ## 6. Classification du contenu (questionnaire Play Console)
 
@@ -83,11 +86,23 @@ plus basse (tout public).
 - **Visuel graphique (feature graphic)** *(FAIT)* : `store_feature_graphic_1024x500.png`,
   1024×500, généré à partir de l'icône livrée et des couleurs de marque déjà
   utilisées. À valider ou faire ajuster.
-- ~~**URL publique de la politique de confidentialité**~~ *(FAIT — hébergée)* :
-  https://sapsapservices.com/clm-ocass/confidentialite — à vérifier une
-  dernière fois de ton côté dans un navigateur (page générée en JavaScript
-  côté client, impossible à confirmer par récupération automatique depuis
-  cette session) que le contenu affiché correspond bien à
-  `POLITIQUE_CONFIDENTIALITE.md` (contact info@sapsapservices.com, loi
-  L/2016/037/AN).
+- **URL publique de la politique de confidentialité** *(BLOQUANT — contenu
+  non conforme constaté)* : https://sapsapservices.com/clm-ocass/confidentialite
+  est bien hébergée, mais d'après les captures d'écran fournies le 18 août
+  2026, la page qui y est réellement affichée n'est **pas**
+  `politique-confidentialite.html` (celle produite et vérifiée dans cette
+  session) — c'est un document différent, dont au moins une affirmation
+  contredit le code vérifié de l'app : il indique que le formulaire de
+  signalement anonyme collecte un nom/prénom et un numéro de téléphone, ce
+  qui est faux (vérifié dans `lib/models/signalement_model.dart`,
+  `lib/screens/signalement_form_screen.dart` et
+  `lib/services/signalement_service.dart` — aucun champ nom/téléphone n'existe
+  dans ce flux). Il omet aussi la référence à la loi L/2016/037/AN et affiche
+  un numéro de téléphone différent (+224 61 42 67 911) de celui confirmé
+  ci-dessous. **Cette URL ne doit pas être utilisée comme lien de politique de
+  confidentialité dans la Play Console tant que ce contenu n'est pas
+  remplacé** par `politique-confidentialite.html` (ou corrigé pour y
+  correspondre) — un décalage entre la politique publiée et le comportement
+  réel de l'app est exactement le type de non-conformité qui motive un rejet
+  Play Store.
 - ~~**Téléphone** *(à vérifier)*~~ *(FAIT — confirmé)* : +226 76 41 09 90.
