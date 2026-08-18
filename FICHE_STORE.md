@@ -78,10 +78,23 @@ plus basse (tout public).
 
 ## 7. Ce qu'il reste à fournir de ton côté
 
-- **Captures d'écran réelles** : minimum 2 par format (téléphone au minimum,
-  idéalement aussi tablette 7" et 10" si l'app les supporte). À prendre
-  depuis un appareil ou un émulateur, une fois l'app compilée en local — cette
-  session cloud n'a pas d'émulateur Android/iOS disponible pour les produire.
+- ~~**Captures d'écran réelles**~~ *(FAIT — 18 août 2026)* : 5 captures
+  téléphone prises sur appareil réel (ICL LX9, Android 12) depuis le build
+  release signé, via `adb exec-out screencap`, puis recadrées en 1080×2160 et
+  converties en JPEG (`sips`) pour respecter les deux contraintes Play
+  vérifiées : ratio maximum 2:1 (l'écran natif 1080×2440 = 2,26:1 aurait été
+  refusé) et absence de canal alpha. Elles se trouvent sur le poste local dans
+  `~/captures-clm-ocass/play/` (originaux PNG non recadrés conservés dans le
+  dossier parent) — non versionnées ici pour ne pas alourdir le dépôt.
+  Écrans retenus : accueil, formulaire (localisation), formulaire (détails),
+  récapitulatif avec la mention d'anonymat, statistiques publiques.
+  *Point de vigilance appliqué :* la capture du récapitulatif a été refaite
+  avec un cas d'exemple neutre (panne d'équipement) après qu'une première
+  version montrait un signalement mettant en cause le personnel d'un centre
+  de santé nommé — publier cela aurait été en tension avec l'engagement
+  « aucun signalement n'est rendu public individuellement ».
+  Tablettes 7"/10" : non fournies, facultatif tant que le format téléphone
+  est couvert.
 - **Visuel graphique (feature graphic)** *(FAIT)* : `store_feature_graphic_1024x500.png`,
   1024×500, généré à partir de l'icône livrée et des couleurs de marque déjà
   utilisées. À valider ou faire ajuster.
@@ -99,3 +112,18 @@ plus basse (tout public).
   impact sur la conformité déclaré = réel.
 - ~~**Téléphone** *(à vérifier)*~~ *(FAIT — confirmé le 18 août 2026, après
   correction)* : +224 61 42 67 911.
+
+---
+
+## 8. Points cosmétiques repérés, non bloquants
+
+Relevés le 18 août 2026 en examinant les captures d'écran réelles. Aucun
+n'empêche la soumission ; à traiter quand l'occasion se présente.
+
+- **Nom affiché dans l'app : « CLM/OCASS Guinée » (barre oblique)** alors que
+  le nom de l'app (`android:label`), le bundle iOS et cette fiche store
+  utilisent le tiret : « CLM-OCASS Guinée ». Harmonisation à prévoir, de
+  préférence côté app pour s'aligner sur le nom store.
+- **Titre tronqué dans la barre d'app du formulaire** : « Signaler un
+  dysfoncti… ». Comportement normal de l'AppBar, mais un libellé plus court
+  (ex. « Nouveau signalement ») rendrait mieux à l'écran comme en capture.
