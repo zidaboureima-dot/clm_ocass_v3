@@ -63,8 +63,8 @@ signalement communautaire), moins précise sur le domaine.
   https://sapsapservices.com/clm-ocass/confidentialite — ⚠️ *voir §7 : le
   contenu actuellement en ligne à cette adresse ne correspond pas au document
   vérifié et ne doit pas être soumis tel quel.*
-- **Téléphone :** +226 76 41 09 90 *(confirmé côté fiche store — à
-  réconcilier avec le +224 61 42 67 911 affiché sur la page hébergée, voir §7)*
+- **Téléphone :** +224 61 42 67 911 *(confirmé le 18 août 2026 — la valeur
+  +226 76 41 09 90 précédemment retenue dans cette fiche était erronée)*
 
 ## 6. Classification du contenu (questionnaire Play Console)
 
@@ -97,12 +97,13 @@ plus basse (tout public).
   qui est faux (vérifié dans `lib/models/signalement_model.dart`,
   `lib/screens/signalement_form_screen.dart` et
   `lib/services/signalement_service.dart` — aucun champ nom/téléphone n'existe
-  dans ce flux). Il omet aussi la référence à la loi L/2016/037/AN et affiche
-  un numéro de téléphone différent (+224 61 42 67 911) de celui confirmé
-  ci-dessous. **Cette URL ne doit pas être utilisée comme lien de politique de
-  confidentialité dans la Play Console tant que ce contenu n'est pas
-  remplacé** par `politique-confidentialite.html` (ou corrigé pour y
-  correspondre) — un décalage entre la politique publiée et le comportement
-  réel de l'app est exactement le type de non-conformité qui motive un rejet
-  Play Store.
-- ~~**Téléphone** *(à vérifier)*~~ *(FAIT — confirmé)* : +226 76 41 09 90.
+  dans ce flux). Il omet aussi la référence à la loi L/2016/037/AN. Le numéro
+  de téléphone qui y figure (+224 61 42 67 911) a en revanche été confirmé
+  exact le 18 août 2026 et est repris en section 5 ci-dessus. **Cette URL ne
+  doit pas être utilisée comme lien de politique de confidentialité dans la
+  Play Console tant que ce contenu n'est pas remplacé** par
+  `politique-confidentialite.html` (ou corrigé pour y correspondre) — un
+  décalage entre la politique publiée et le comportement réel de l'app est
+  exactement le type de non-conformité qui motive un rejet Play Store.
+- ~~**Téléphone** *(à vérifier)*~~ *(FAIT — confirmé le 18 août 2026, après
+  correction)* : +224 61 42 67 911.
