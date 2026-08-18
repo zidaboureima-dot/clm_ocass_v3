@@ -59,9 +59,8 @@ signalement communautaire), moins précise sur le domaine.
 - **Email de contact / support :** info@sapsapservices.com
 - **Email dédié aux questions de données personnelles :** info@sapsapservices.com
   *(identique au contact support — cohérent avec `POLITIQUE_CONFIDENTIALITE.md`)*
-- **Site web / politique de confidentialité :** à héberger sur
-  `www.sapsapservices.com` (page prête : `politique-confidentialite.html`, à
-  déposer sur ce domaine — voir §7 pour l'URL finale exacte à confirmer).
+- **Site web / politique de confidentialité :**
+  https://sapsapservices.com/clm-ocass/confidentialite
 - **Téléphone :** +226 76 41 09 90 *(confirmé)*
 
 ## 6. Classification du contenu (questionnaire Play Console)
@@ -84,11 +83,11 @@ plus basse (tout public).
 - **Visuel graphique (feature graphic)** *(FAIT)* : `store_feature_graphic_1024x500.png`,
   1024×500, généré à partir de l'icône livrée et des couleurs de marque déjà
   utilisées. À valider ou faire ajuster.
-- **URL publique de la politique de confidentialité** *(page prête, dépôt à
-  faire de ton côté)* : `politique-confidentialite.html` est une page HTML
-  autonome, stylée, prête à être déposée sur `www.sapsapservices.com`. Une
-  fois en ligne, confirme-moi l'URL exacte (ex.
-  `https://www.sapsapservices.com/clm-ocass/politique-confidentialite.html`)
-  pour que je la reporte dans ce document et que tu la colles dans la Play
-  Console.
+- ~~**URL publique de la politique de confidentialité**~~ *(FAIT — hébergée)* :
+  https://sapsapservices.com/clm-ocass/confidentialite — à vérifier une
+  dernière fois de ton côté dans un navigateur (page générée en JavaScript
+  côté client, impossible à confirmer par récupération automatique depuis
+  cette session) que le contenu affiché correspond bien à
+  `POLITIQUE_CONFIDENTIALITE.md` (contact info@sapsapservices.com, loi
+  L/2016/037/AN).
 - ~~**Téléphone** *(à vérifier)*~~ *(FAIT — confirmé)* : +226 76 41 09 90.
