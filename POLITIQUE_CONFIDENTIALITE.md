@@ -1,6 +1,6 @@
 # Politique de confidentialité — CLM-OCASS Guinée
 
-**Dernière mise à jour :** 17 août 2026
+**Dernière mise à jour :** 18 août 2026
 
 Cette page décrit précisément quelles données CLM-OCASS traite, dans quel but,
 combien de temps elles sont conservées, et ce qui n'est jamais collecté. Elle
@@ -80,11 +80,11 @@ conservation au strict nécessaire.*
 
 Contrairement au citoyen qui signale, les personnes chargées de traiter les
 signalements (administrateur, superviseur, point focal) disposent d'un compte.
-Pour ces personnes, sont traités : une adresse email, un mot de passe (géré de
-façon sécurisée, jamais stocké en clair), un rôle et une zone géographique de
-responsabilité. Le compte est créé par un administrateur, avec un mot de passe
-temporaire envoyé par email et un changement de mot de passe obligatoire à la
-première connexion.
+Pour ces personnes, sont traités : un nom, une adresse email, un numéro de
+téléphone, un mot de passe (géré de façon sécurisée, jamais stocké en clair),
+un rôle et une zone géographique de responsabilité. Le compte est créé par un
+administrateur, avec un mot de passe temporaire envoyé par email et un
+changement de mot de passe obligatoire à la première connexion.
 
 Ces adresses email sont utilisées uniquement pour les notifications liées au
 fonctionnement du dispositif (création de compte, réinitialisation de mot de

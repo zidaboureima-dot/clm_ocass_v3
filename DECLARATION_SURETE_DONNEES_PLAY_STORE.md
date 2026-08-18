@@ -1,6 +1,6 @@
 # Déclaration de sûreté des données — Google Play (Data safety)
 
-**Dernière mise à jour :** 17 août 2026
+**Dernière mise à jour :** 18 août 2026
 
 Ce document sert de brouillon prêt à recopier dans le formulaire « Data
 safety » de la Play Console (Play Console → Contenu de l'app → Sûreté des
@@ -53,11 +53,11 @@ avant l'enregistrement (`AUDIT_EXIF_PHOTOS.md`).
 
 | Sous-type | Collecté ? | Détail |
 | --- | --- | --- |
-| Nom | Non | — |
+| Nom | **Oui** | Uniquement pour les comptes des responsables (admin, superviseur, point focal). Jamais pour la personne qui signale. |
 | Adresse email | **Oui** | Uniquement pour les comptes des responsables (admin, superviseur, point focal). Jamais pour la personne qui signale. |
 | Identifiants utilisateur | **Oui** | Identifiant de compte (responsables uniquement), généré par le backend. |
 | Adresse postale | Non | — |
-| Numéro de téléphone | Non | — |
+| Numéro de téléphone | **Oui** | Uniquement pour les comptes des responsables (admin, superviseur, point focal). Jamais pour la personne qui signale. |
 | Origine ethnique, opinions religieuses/politiques, orientation sexuelle | Non | — |
 | Autres informations | Non | — |
 
