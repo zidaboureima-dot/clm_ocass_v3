@@ -189,10 +189,34 @@ avant que cet étage n'existe et ne soit testé.
 
 ## 5. Garde-fous à implémenter
 
-- **Minimisation avant envoi.** Suppression des numéros de téléphone,
-  adresses email et séquences ressemblant à un identifiant. Les auteurs
-  d'actions sont réduits à leur **rôle** (« un point focal »), jamais à leur
-  identité.
+- ~~**Minimisation avant envoi.**~~ *(FAIT — 19 août 2026)* :
+  `supabase/functions/_shared/minimisation.ts`, testé
+  (`minimisation.test.ts`, 23 assertions).
+
+  Deux minimisations distinctes y sont implémentées :
+
+  1. **Textuelle** — retrait des numéros de téléphone (formats guinéens,
+     burkinabè, internationaux et locaux), adresses email, liens et longues
+     suites de chiffres. Les motifs sont remplacés par un marqueur explicite
+     (`[numéro retiré]`) plutôt que supprimés : le modèle voit qu'une
+     information a été ôtée, et la relecture humaine peut le vérifier.
+  2. **Structurelle** — seuls les champs utiles au rapport sont recopiés.
+     Ni `auteur_uid` (seul le **rôle** est transmis), ni l'identifiant du
+     signalement ne sortent de la base. C'est la plus efficace des deux :
+     ce qui n'est pas recopié ne peut pas fuir.
+
+  *Point d'attention consigné dans le code :* les dates échappent au
+  nettoyage grâce à un contrôle dédié — « réunion du 15 08 2026 » a huit
+  chiffres en quatre groupes, indiscernable d'un numéro par la seule forme.
+  Sans ce contrôle, le rapport perdrait sa dimension temporelle.
+
+  **Limite structurelle, à ne jamais perdre de vue :** cet étage retire des
+  identifiants de *forme* reconnaissable. Il ne peut rien contre une
+  identification par le *contexte* — « l'infirmière de garde mardi soir m'a
+  renvoyée » passera intact. Aucune expression régulière ne couvrira jamais
+  ce cas. C'est pourquoi les deux garde-fous suivants (sortie agrégée,
+  validation humaine) ne sont pas des options : ils compensent cette limite,
+  et en retirer un rouvre le risque en entier.
 - **Prestataire sous contrat.** Fournisseur offrant contractuellement la
   **non-réutilisation des données pour l'entraînement** et une **rétention
   nulle ou minimale**, avec accord de traitement des données signé. À défaut,
