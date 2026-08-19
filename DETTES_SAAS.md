@@ -33,6 +33,18 @@ doit être lue depuis la config du tenant concerné.
 **Cible.** Lire `FROM_EMAIL` depuis la config par pays, résolue à partir du
 tenant du destinataire / du signalement concerné.
 
+**Avancement (19 août 2026).** La couche de configuration existe désormais :
+`public.configuration_pays` (voir
+`20260819_configuration_pays_et_rapports.sql`) comporte une colonne
+`from_email`, et le module `supabase/functions/_shared/config_pays.ts` sait la
+lire. Elle a été créée pour l'interrupteur par pays du rapport périodique,
+mais elle est dimensionnée pour cette dette.
+
+**Reste à faire :** câbler les quatre Edge Functions d'email sur cette
+colonne, et retirer la constante en dur. Non fait ici parce que cela impose
+leur redéploiement — à grouper avec la correction de la barre oblique
+« CLM/OCASS » qu'elles contiennent également (voir `FICHE_STORE.md` §8).
+
 ---
 
 ## 2. Vérification de domaine Resend par pays

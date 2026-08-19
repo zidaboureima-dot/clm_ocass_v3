@@ -361,6 +361,42 @@ livré et éprouvé **avant** toute décision sur le LLM.
 3. **Étape 3 — la diffusion institutionnelle** : sortie agrégée, validation
    humaine, mention explicite. À n'engager que si l'étape 2 est concluante.
 
+### État au 19 août 2026 — construit, éteint
+
+L'étape 2 est **écrite et livrée, mais désactivée**. Cette dissociation est
+volontaire : construire n'est pas déployer, et rien n'interdisait d'écrire le
+code pendant que les préalables juridiques et documentaires s'instruisent. Ce
+qui aurait été fautif, c'est de transmettre des données réelles avant leur
+levée — ce que le dispositif rend maintenant impossible par construction.
+
+Livré :
+
+- `configuration_pays` — un interrupteur **par pays**, `rapport_llm_actif`,
+  **faux par défaut**, assorti d'un champ `rapport_llm_motif` où la raison de
+  l'état est écrite. Aucune policy RLS ne permet de le modifier depuis
+  l'application : l'activation exige un acte délibéré en base. Une case à
+  cocher dans une interface invite à l'oubli ; une ligne de SQL motivée laisse
+  une trace.
+- `rapports_periodiques` — le statut `brouillon` par défaut encode
+  l'exigence de validation humaine **dans le schéma** plutôt que dans une
+  consigne. Ce qui est porté par le schéma survit aux changements d'équipe.
+- `trg_verifier_rapport_llm_autorise` — seconde barrière en base : même si
+  la fonction était contournée, l'insertion d'un rapport reste refusée tant
+  que le pays ne l'autorise pas.
+- Edge Function `rapport-periodique` (Mistral) — vérifie le drapeau **avant**
+  toute extraction, minimise **avant** tout appel au prestataire, enregistre
+  en brouillon et **n'envoie rien à personne**.
+
+Vérifié par simulation de la chaîne complète : ni identifiant de cas, ni
+identifiant d'agent, ni numéro, ni adresse email n'apparaissent dans l'invite
+réellement transmise ; le nom de l'établissement, le rôle de l'auteur et les
+dates y sont bien conservés.
+
+**Pour activer, le jour venu :** la commande figure en fin de
+`20260819_configuration_pays_et_rapports.sql`. Elle exige d'écrire le motif —
+donc de nommer l'avis reçu et la date de mise à jour de la politique de
+confidentialité.
+
 ---
 
 ## 9. À mettre à jour AVANT l'étape 2
