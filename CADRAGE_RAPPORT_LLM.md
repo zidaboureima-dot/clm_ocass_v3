@@ -241,6 +241,46 @@ avant que cet étage n'existe et ne soit testé.
 
 ---
 
+## 5.1 Qualification des données transmises (analyse du 19 août 2026)
+
+Après implémentation de l'étage de minimisation, **le payload transmis ne
+contient aucune donnée identifiante** :
+
+| Personne concernée | Ce qui est transmis |
+| --- | --- |
+| Citoyen qui signale | Rien. Aucun compte, aucune identité collectée en amont — c'est la conception même du dispositif |
+| Agent traitant (point focal, superviseur, admin) | Son **rôle** seulement. `auteur_uid` est retiré à la construction du payload |
+
+**Le seul risque résiduel ne porte sur aucune de ces deux catégories.** Il
+porte sur une **tierce personne évoquée dans un texte libre** : un agent de
+santé décrit dans une description citoyenne ou dans une action menée. Dans
+une petite structure, « le seul médecin du centre » identifie une personne
+sans la nommer. C'est la limite structurelle de l'étage de minimisation (§5),
+et elle est irréductible par des moyens techniques.
+
+### Décision : le centre de santé reste dans le périmètre
+
+`centre_sante` est conservé dans le payload. Un rapport incapable de pointer
+un établissement précis ne remplit pas sa fonction de plaidoyer : le suivi
+communautaire consiste justement à dire *où* les dysfonctionnements se
+concentrent.
+
+**Contrepartie obligatoire, à inscrire dans l'invite du modèle :** interdire
+explicitement toute mention d'une fonction ou d'un rôle individuel dans le
+rapport produit (« le médecin-chef », « l'infirmière de garde », « le
+gestionnaire du stock »). Le rapport parle d'établissements et de
+dysfonctionnements, jamais de personnes.
+
+**Portée réelle de cette contrepartie — à ne pas surestimer.** Une consigne
+donnée à un modèle n'est pas une garantie technique : elle est respectée la
+plupart du temps, pas systématiquement. Ce qui rend cette protection
+effective, c'est la **relecture humaine avant diffusion externe** (§5). La
+consigne réduit la fréquence du problème ; la relecture est ce qui l'arrête.
+Supprimer la relecture au motif que la consigne existe serait une erreur de
+raisonnement aux conséquences directes sur des personnes.
+
+---
+
 ## 6. Cadre légal national (à instruire)
 
 La loi guinéenne **L/2016/037/AN du 28 juillet 2016**, socle juridique
@@ -253,6 +293,35 @@ prestataire.
 
 **Ce point n'est pas tranché ici et ne doit pas l'être par supposition.** Il
 appelle une lecture du texte, et le cas échéant un avis juridique.
+
+### La question à poser en premier
+
+L'analyse du §5.1 change l'ordre d'instruction. Plutôt que de demander
+« à quelles conditions peut-on transférer ces données ? », la question
+préalable est :
+
+> **Après minimisation, ce qui est transmis constitue-t-il encore des données
+> à caractère personnel au sens de la loi L/2016/037/AN ?**
+
+Si la réponse est **non** — aucune personne concernée n'étant identifiable —
+les dispositions sur le transfert transfrontalier ne s'appliquent pas, et le
+choix du prestataire redevient une décision purement technique. Si la réponse
+est **oui**, au motif qu'une description peut identifier indirectement un
+agent de santé (§5.1), alors les conditions du texte s'appliquent et
+orientent le choix du prestataire.
+
+Cette question décide de tout le reste : elle doit être instruite avant
+toute autre.
+
+**Interlocuteurs identifiés :** l'ANSSI Guinée et l'ARPT publient toutes deux
+le texte. L'ANSSI, qui porte la loi, est le destinataire naturel d'une
+demande écrite. La Guinée figure par ailleurs parmi les pays référencés par
+l'AFAPDP (association francophone des autorités de protection des données),
+ce qui constitue une piste pour identifier l'autorité compétente.
+
+*Réserve : ce document n'est pas un avis juridique et son auteur n'a pas
+qualité pour en rendre un. Il pose la question dans les termes utiles, il ne
+la tranche pas.*
 
 ---
 
