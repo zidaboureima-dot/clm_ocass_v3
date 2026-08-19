@@ -188,7 +188,7 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Signaler un dysfonctionnement')),
+      appBar: AppBar(title: const Text('Nouveau signalement')),
       body: Stepper(
         currentStep: _etapeActuelle,
         onStepContinue: () {

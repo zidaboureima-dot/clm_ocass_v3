@@ -115,15 +115,28 @@ plus basse (tout public).
 
 ---
 
-## 8. Points cosmétiques repérés, non bloquants
+## 8. Points cosmétiques repérés
 
 Relevés le 18 août 2026 en examinant les captures d'écran réelles. Aucun
-n'empêche la soumission ; à traiter quand l'occasion se présente.
+n'empêchait la soumission.
 
-- **Nom affiché dans l'app : « CLM/OCASS Guinée » (barre oblique)** alors que
-  le nom de l'app (`android:label`), le bundle iOS et cette fiche store
-  utilisent le tiret : « CLM-OCASS Guinée ». Harmonisation à prévoir, de
-  préférence côté app pour s'aligner sur le nom store.
-- **Titre tronqué dans la barre d'app du formulaire** : « Signaler un
-  dysfoncti… ». Comportement normal de l'AppBar, mais un libellé plus court
-  (ex. « Nouveau signalement ») rendrait mieux à l'écran comme en capture.
+- ~~**Nom affiché dans l'app : « CLM/OCASS Guinée » (barre oblique)**~~
+  *(CORRIGÉ côté application le 19 août 2026)* : `lib/main.dart` utilise
+  désormais « CLM-OCASS Guinée », aligné sur `android:label`, le bundle iOS
+  et cette fiche. **Reste à traiter :** la barre oblique subsiste dans
+  4 Edge Functions, dans le nom d'expéditeur des emails (`FROM_EMAIL`) et
+  dans les objets et corps des messages envoyés aux responsables —
+  `clever-service`, `quick-endpoint`, `rapid-action`, `quick-task`. C'est du
+  texte vu par les utilisateurs, mais sa correction impose un redéploiement
+  des fonctions ; à faire de préférence en même temps que la levée de la
+  dette n°1 de `DETTES_SAAS.md` (FROM_EMAIL codé en dur, à lire depuis la
+  configuration du tenant).
+- ~~**Titre tronqué dans la barre d'app du formulaire**~~ *(CORRIGÉ le
+  19 août 2026)* : l'AppBar affiche désormais « Nouveau signalement » au lieu
+  de « Signaler un dysfonctionnement », qui était tronqué en « Signaler un
+  dysfoncti… ». Le bouton de l'écran d'accueil conserve le libellé complet,
+  plus explicite à cet endroit.
+
+*Note : les captures d'écran de la fiche store montrent l'ancien libellé.
+À refaire si l'on souhaite une parfaite fidélité, mais l'écart est mineur et
+Google n'exige pas que les captures soient à jour au pixel près.*

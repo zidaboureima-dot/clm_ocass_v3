@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CLM/OCASS Guinée',
+      title: 'CLM-OCASS Guinée',
       theme: AppTheme.lightTheme(),
       home: const HomePage(),
       debugShowCheckedModeBanner: false,
@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CLM/OCASS Guinée'),
+        title: const Text('CLM-OCASS Guinée'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
