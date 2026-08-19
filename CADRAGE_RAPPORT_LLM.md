@@ -116,6 +116,38 @@ auteur que **ce qu'il écrit là pourra figurer dans un rapport transmis aux
 autorités**, contrairement à l'annotation. Sans cette mention, la distinction
 entre les deux espaces ne tiendra pas à l'usage.
 
+### 3.1 Quand la saisie a lieu (décision du 19 août 2026)
+
+Un champ disponible en permanence, à remplir quand on veut, n'est en pratique
+pas rempli : on obtient un champ élégant et vide. La saisie est donc **ancrée
+sur deux moments qui existent déjà dans le workflow** :
+
+| Moment | Auteur | Contenu attendu |
+| --- | --- | --- |
+| Avant de marquer « traité » | Superviseur | L'action menée : type de démarche, ce qui a été fait, résultat à ce jour |
+| Avant de « clôturer » | Administrateur | Une note de synthèse concluant le cas (`type_action = 'synthese'`) |
+
+Aucune nouvelle habitude à créer, et une garantie de complétude : tout cas
+traité a une action documentée, tout cas clôturé a une synthèse.
+
+**Exigence portée par la base**, via un trigger distinct de celui des
+permissions (`trg_exiger_documentation_statut`). Les deux préoccupations —
+« qui a le droit de faire quoi » et « le cas est-il documenté » — restent
+séparées et modifiables indépendamment. L'interface ne fait qu'anticiper le
+refus pour offrir un parcours fluide : la base reste l'autorité finale,
+conformément au principe posé en `20260814_workflow_statuts.sql`.
+
+**Le schéma autorise plusieurs actions par signalement**, même si l'interface
+n'en propose qu'une à chacun de ces deux moments. Ouvrir la saisie plus
+largement plus tard ne coûtera aucune migration.
+
+**Limite assumée.** L'action n'étant consignée qu'en fin de traitement, le
+délai avant *première* action n'est pas mesurable. Mais les cas bloqués —
+ceux qui n'atteignent jamais « traité » — restent visibles par leur absence
+même : « N cas sans aucune action depuis plus de X jours » se calcule à
+partir du statut et des dates. Ce sont précisément les cas qui intéressent
+le plaidoyer.
+
 **RLS :** mêmes règles de périmètre que `annotations` — admin national,
 superviseur régional, point focal sur ses cas assignés, public exclu. Pas de
 policy UPDATE ni DELETE.
@@ -137,7 +169,7 @@ Déployer la fonctionnalité sans mettre ces deux documents à jour **au
 préalable** constituerait exactement l'écart *déclaré ≠ réel* que le projet
 identifie comme motif de rejet puis de suspension.
 
-### Décision restant à prendre : les descriptions citoyennes
+### Décision prise le 19 août 2026 : les descriptions citoyennes
 
 Le périmètre initialement envisagé incluait les **descriptions rédigées par
 les citoyens**. La décision du §2.2 invite à réexaminer ce point, car le même
@@ -147,16 +179,11 @@ ni d'un prestataire tiers**. Rien n'empêche par ailleurs quelqu'un d'écrire
 « l'infirmière de garde mardi soir m'a renvoyée » — texte qui n'identifie pas
 son auteur mais identifie indirectement un tiers.
 
-Deux positions cohérentes :
-
-- **Exclure les descriptions.** Le modèle ne reçoit que le structuré et les
-  actions menées. Aucune parole citoyenne ne sort. La perte analytique est
-  faible dès lors que les catégories sont bien renseignées.
-- **Les inclure après minimisation.** Nécessite l'étage de nettoyage du §5 et
-  se justifie si les catégories s'avèrent trop grossières pour restituer la
-  nature réelle des problèmes.
-
-*Ce point n'est pas tranché à ce jour.*
+**Décision : les descriptions restent dans le périmètre**, la richesse
+analytique étant jugée nécessaire, **mais l'étage de minimisation du §5
+devient obligatoire et bloquant** — il n'est pas une option d'implémentation
+mais la condition de cette décision. Aucun appel au modèle ne doit être écrit
+avant que cet étage n'existe et ne soit testé.
 
 ---
 
@@ -261,7 +288,6 @@ l'inverse :
 
 ## 10. Décisions restant à prendre
 
-- Inclure ou non les descriptions citoyennes (§4).
 - Validation du vocabulaire de `type_action` par le métier (§3).
 - Périodicité retenue.
 - Choix du prestataire de modèle, au regard des garanties du §5 et des

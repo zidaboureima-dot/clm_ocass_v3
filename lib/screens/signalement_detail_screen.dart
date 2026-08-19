@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import '../models/action_menee_model.dart';
 import '../models/annotation_model.dart';
 import '../models/signalement_model.dart';
 import '../models/user_profile_model.dart';
+import '../services/action_menee_service.dart';
 import '../services/annotation_service.dart';
 import '../services/photo_service.dart';
 import '../services/signalement_service.dart';
 import '../services/user_service.dart';
 import '../widgets/contacts_chaine_widget.dart';
 import '../theme/app_colors.dart';
+import 'documentation_statut_dialog.dart';
 
 class SignalementDetailScreen extends StatefulWidget {
   final Signalement signalement;
@@ -117,9 +120,43 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
     }
   }
 
+  /// Documentation obligatoire avant deux transitions :
+  ///   - vers 'traite'  : une action menée (superviseur) ;
+  ///   - vers 'cloture' : une note de synthèse (admin).
+  ///
+  /// L'action est écrite AVANT le changement de statut : le trigger
+  /// `trg_exiger_documentation_statut` refuse la transition si elle manque.
+  /// L'écran ne fait qu'anticiper ce refus pour offrir un parcours fluide —
+  /// la base reste l'autorité finale, comme pour les permissions.
   Future<void> _changerStatut(String nouveauStatut) async {
+    final exigeDocumentation =
+        nouveauStatut == 'traite' || nouveauStatut == 'cloture';
+
+    DocumentationSaisie? saisie;
+    if (exigeDocumentation) {
+      saisie = await DocumentationStatutDialog.afficher(
+        context,
+        synthese: nouveauStatut == 'cloture',
+      );
+      if (saisie == null) return; // annulé : on ne touche pas au statut
+    }
+
+    if (!mounted) return;
     setState(() => _majStatutEnCours = true);
     try {
+      if (saisie != null) {
+        await ActionMeneeService().ajouterAction(
+          ActionMenee(
+            signalementId: widget.signalement.id!,
+            auteurUid: widget.profil.id,
+            roleAuteur: widget.profil.role,
+            typeAction: saisie.typeAction,
+            description: saisie.description,
+            resultat: saisie.resultat,
+            createdAt: DateTime.now(),
+          ),
+        );
+      }
       await SignalementService().mettreAJourStatut(widget.signalement.id!, nouveauStatut);
       if (!mounted) return;
       setState(() => _statutActuel = nouveauStatut);
@@ -345,7 +382,86 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
           const SizedBox(height: 8),
           ContactsChaineWidget(signalement: s, profil: widget.profil),
           const SizedBox(height: 24),
+          const Text('Actions menées', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.vertFonce)),
+          const SizedBox(height: 4),
+          const Text(
+            'Ce qui a été entrepris sur ce cas. Ces éléments peuvent figurer '
+            'dans un rapport transmis aux autorités.',
+            style: TextStyle(fontSize: 12, color: AppColors.grisTexte, height: 1.4),
+          ),
+          const SizedBox(height: 8),
+          StreamBuilder<List<ActionMenee>>(
+            stream: ActionMeneeService().streamActions(s.id!),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final actions = snapshot.data!;
+              if (actions.isEmpty) {
+                return const Text(
+                  'Aucune action documentée. Elle sera demandée au moment de '
+                  'marquer le cas traité.',
+                  style: TextStyle(color: AppColors.grisTexte, fontSize: 13, height: 1.4),
+                );
+              }
+              return Column(
+                children: actions.map((a) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: a.estSynthese ? AppColors.vertTresClair : Colors.white,
+                      border: Border.all(color: AppColors.bordure),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                a.libelleType,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.vertFonce,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${a.createdAt.day}/${a.createdAt.month}/${a.createdAt.year}',
+                              style: const TextStyle(fontSize: 11, color: AppColors.grisTexte),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(a.description, style: const TextStyle(height: 1.4)),
+                        if (!a.estSynthese) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            '${a.libelleResultat} · ${a.roleAuteur}',
+                            style: const TextStyle(fontSize: 11, color: AppColors.grisTexte),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
           const Text('Annotations', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.vertFonce)),
+          const SizedBox(height: 4),
+          const Text(
+            'Espace de travail interne. Ces échanges ne sortent pas du '
+            'dispositif et ne figurent dans aucun rapport.',
+            style: TextStyle(fontSize: 12, color: AppColors.grisTexte, height: 1.4),
+          ),
           const SizedBox(height: 8),
           StreamBuilder<List<Annotation>>(
             stream: AnnotationService().streamAnnotations(s.id!),
