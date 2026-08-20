@@ -29,7 +29,7 @@
 // =====================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { construirePayload, traceTransmission } from '../_shared/minimisation.ts';
+import { calculerAgregats, construirePayload, traceTransmission } from '../_shared/minimisation.ts';
 import { exigerRapportLlmActif } from '../_shared/config_pays.ts';
 import { ACTIONS_DEMO, SIGNALEMENTS_DEMO } from './demonstration.ts';
 
@@ -74,6 +74,7 @@ function construireInvite(
   debut: string,
   fin: string,
   donnees: unknown,
+  agregats: unknown,
 ): string {
   return `Tu rédiges une synthèse périodique pour CLM-OCASS ${libellePays}, un dispositif de suivi des services de santé dirigé par les communautés.
 
@@ -94,7 +95,15 @@ STRUCTURE ATTENDUE
 
 TON : factuel, sobre, destiné à des autorités sanitaires. Pas de superlatifs.
 
-DONNÉES (JSON) :
+COMPTAGES — À REPRENDRE TELS QUELS
+Les chiffres ci-dessous ont été calculés automatiquement. Ils font foi.
+Ne les recompte pas, ne les recoupe pas, ne les arrondis pas : reprends-les
+exactement. Si un total te semble incohérent avec les données détaillées,
+signale-le en fin de rapport plutôt que de le corriger toi-même.
+
+${JSON.stringify(agregats, null, 2)}
+
+DONNÉES DÉTAILLÉES (JSON) — pour l'analyse qualitative, pas pour le calcul :
 ${JSON.stringify(donnees, null, 2)}`;
 }
 
@@ -159,6 +168,7 @@ Deno.serve(async (req) => {
         '2026-07-01',
         '2026-07-31',
         payloadDemo,
+        calculerAgregats(payloadDemo),
       );
       const contenuDemo = await appelerMistral(inviteDemo);
       return reponse({
@@ -221,6 +231,7 @@ Deno.serve(async (req) => {
       debut.toISOString().slice(0, 10),
       fin.toISOString().slice(0, 10),
       payload,
+      calculerAgregats(payload),
     );
     const contenu = await appelerMistral(invite);
 

@@ -187,6 +187,66 @@ export function construirePayload(
   }));
 }
 
+/** Comptages calculés, transmis au modèle comme faits établis. */
+export interface Agregats {
+  total: number;
+  par_region: Record<string, number>;
+  par_prefecture: Record<string, number>;
+  par_groupe: Record<string, number>;
+  par_categorie: Record<string, number>;
+  par_gravite: Record<string, number>;
+  par_statut: Record<string, number>;
+  par_centre: Record<string, number>;
+  actions_total: number;
+  actions_par_type: Record<string, number>;
+  actions_par_resultat: Record<string, number>;
+  cas_sans_action: number;
+}
+
+function compter(valeurs: string[]): Record<string, number> {
+  const compte: Record<string, number> = {};
+  for (const v of valeurs) compte[v] = (compte[v] ?? 0) + 1;
+  return compte;
+}
+
+/**
+ * Calcule les comptages AVANT l'appel au modèle.
+ *
+ * POURQUOI CETTE FONCTION EXISTE
+ *   Un modèle de langage rédige bien et compte mal. Éprouvé en conditions
+ *   réelles le 20 août 2026 : sur le même jeu de six signalements, deux
+ *   exécutions ont produit deux répartitions différentes, toutes deux
+ *   fausses (2 urgents annoncés au lieu de 3, 4 signalements dans un groupe
+ *   au lieu de 3).
+ *
+ *   Devant des autorités sanitaires, un chiffre faux est plus dommageable
+ *   qu'une formulation maladroite : il décrédibilise l'ensemble du rapport,
+ *   et par ricochet le dispositif. Aucune consigne d'invite ne corrige une
+ *   faiblesse de cette nature — il faut retirer l'arithmétique au modèle.
+ *
+ *   Les comptages sont donc calculés ici, de façon déterministe, et fournis
+ *   au modèle comme des faits qu'il doit reprendre tels quels. Il lui reste
+ *   ce qu'il fait bien : interpréter, relier, formuler.
+ */
+export function calculerAgregats(payload: SignalementMinimise[]): Agregats {
+  const actions = payload.flatMap((s) => s.actions);
+
+  return {
+    total: payload.length,
+    par_region: compter(payload.map((s) => s.region)),
+    par_prefecture: compter(payload.map((s) => s.prefecture)),
+    par_groupe: compter(payload.map((s) => s.groupe)),
+    par_categorie: compter(payload.map((s) => s.categorie)),
+    par_gravite: compter(payload.map((s) => s.gravite)),
+    par_statut: compter(payload.map((s) => s.statut)),
+    par_centre: compter(payload.map((s) => s.centre_sante)),
+    actions_total: actions.length,
+    actions_par_type: compter(actions.map((a) => a.type_action)),
+    actions_par_resultat: compter(actions.map((a) => a.resultat)),
+    cas_sans_action: payload.filter((s) => s.actions.length === 0).length,
+  };
+}
+
 /**
  * Trace de ce qui a été transmis, à journaliser (cadrage §5).
  *
