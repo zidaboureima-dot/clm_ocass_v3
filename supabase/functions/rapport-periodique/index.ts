@@ -31,6 +31,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { construirePayload, traceTransmission } from '../_shared/minimisation.ts';
 import { exigerRapportLlmActif } from '../_shared/config_pays.ts';
+import { ACTIONS_DEMO, SIGNALEMENTS_DEMO } from './demonstration.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -134,17 +135,48 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // --- 1. La fonctionnalité est-elle autorisée pour ce pays ? ---------
-    // AVANT toute extraction : inutile de sortir des données de la base pour
-    // découvrir ensuite qu'on n'avait pas le droit de les traiter.
-    const config = await exigerRapportLlmActif(supabase, PAYS_CODE);
+    const url = new URL(req.url);
+
+    // --- MODE DÉMONSTRATION ---------------------------------------------
+    // Produit un rapport spécimen à partir d'un jeu de données FABRIQUÉ,
+    // pour présenter le dispositif sans exposer de signalements réels.
+    //
+    // Il ne lit rien et n'écrit rien en base : il n'a donc accès à aucune
+    // donnée réelle, et ne contourne pas le drapeau `rapport_llm_actif` —
+    // celui-ci protège le traitement de données réelles, ce que ce mode ne
+    // fait pas. Le rapport produit n'est pas enregistré.
+    const modeDemo = url.searchParams.get('demo') === '1';
 
     if (!MISTRAL_API_KEY) {
       return reponse({ ok: false, error: 'MISTRAL_API_KEY non configurée.' }, 500);
     }
 
+    if (modeDemo) {
+      const payloadDemo = construirePayload(SIGNALEMENTS_DEMO as never, ACTIONS_DEMO as never);
+      const inviteDemo = construireInvite(
+        'Guinée',
+        '2026-07-01',
+        '2026-07-31',
+        payloadDemo,
+      );
+      const contenuDemo = await appelerMistral(inviteDemo);
+      return reponse({
+        ok: true,
+        mode: 'demonstration',
+        contenu: contenuDemo,
+        trace: traceTransmission(payloadDemo),
+        avertissement:
+          'Rapport produit à partir de données FABRIQUÉES, à des fins de présentation. '
+          + 'Aucun signalement réel n\'a été lu ni transmis. Non enregistré en base.',
+      });
+    }
+
+    // --- 1. La fonctionnalité est-elle autorisée pour ce pays ? ---------
+    // AVANT toute extraction : inutile de sortir des données de la base pour
+    // découvrir ensuite qu'on n'avait pas le droit de les traiter.
+    const config = await exigerRapportLlmActif(supabase, PAYS_CODE);
+
     // --- 2. Période : le mois écoulé, ou celle passée en paramètre -------
-    const url = new URL(req.url);
     const finParam = url.searchParams.get('fin');
     const debutParam = url.searchParams.get('debut');
 
