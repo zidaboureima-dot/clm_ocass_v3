@@ -84,6 +84,7 @@ RÈGLES IMPÉRATIVES
 2. Ne reproduis AUCUNE description mot pour mot. Synthétise toujours.
 3. N'affirme que ce que les données soutiennent. Si une tendance est incertaine, dis-le. N'invente aucune causalité.
 4. Si les données sont trop peu nombreuses pour conclure, écris-le plutôt que de meubler.
+5. QUI SIGNALE : les signalements émanent d'usagers des services de santé, jamais des établissements eux-mêmes. N'écris donc JAMAIS "le centre X a signalé" — écris "un dysfonctionnement a été signalé au centre X", "le centre X fait l'objet de N signalements". L'établissement est ce dont on parle, pas celui qui parle. Inverser les deux dénature le dispositif.
 
 STRUCTURE ATTENDUE
 - Vue d'ensemble : volume, répartition par zone géographique et par catégorie.

@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets : fichiers d'environnement, jamais versionnés.
+# Ajouté le 20/08/2026 après avoir constaté que .env n'était couvert par
+# aucune règle — un fichier de secrets créé par mégarde dans le dépôt serait
+# parti sur GitHub.
+.env
+.env.*
+!.env.example
