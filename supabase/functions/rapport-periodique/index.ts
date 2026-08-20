@@ -134,6 +134,35 @@ async function appelerMistral(invite: string): Promise<string> {
   return contenu;
 }
 
+/**
+ * Appose la mention de provenance au bas du rapport.
+ *
+ * POURQUOI EN CODE, ET NON DANS L'INVITE
+ *   Le cadrage (§5) exige que tout rapport indique qu'il a été produit avec
+ *   l'assistance d'un modèle de langage et validé par un responsable. Une
+ *   mention qui doit TOUJOURS figurer ne peut pas dépendre d'une consigne :
+ *   éprouvé le 20 août 2026, une consigne d'invite est suivie la plupart du
+ *   temps, pas systématiquement. Ce qui doit être garanti se code.
+ *
+ *   Ne pas dire qu'un modèle a contribué au rapport serait par ailleurs une
+ *   seconde forme d'écart entre le déclaré et le réel — celle-là même que
+ *   tout le dispositif s'attache à éviter.
+ */
+function apposerMention(contenu: string, modele: string, demo: boolean): string {
+  const mention = demo
+    ? `\n\n---\n\n*Document de démonstration produit à partir de données **fabriquées**, `
+      + `à des fins de présentation. Aucun signalement réel n'a été lu ni transmis. `
+      + `Rédigé avec l'assistance d'un modèle de langage (${modele}) à partir de `
+      + `comptages calculés automatiquement.*`
+    : `\n\n---\n\n*Rapport rédigé avec l'assistance d'un modèle de langage `
+      + `(${modele}), à partir de signalements anonymes et de comptages calculés `
+      + `automatiquement. Les chiffres sont établis par le système ; l'analyse est `
+      + `produite par le modèle. Ce document doit être relu et validé par un `
+      + `responsable avant toute diffusion.*`;
+
+  return contenu.trimEnd() + mention;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
@@ -170,7 +199,7 @@ Deno.serve(async (req) => {
         payloadDemo,
         calculerAgregats(payloadDemo),
       );
-      const contenuDemo = await appelerMistral(inviteDemo);
+      const contenuDemo = apposerMention(await appelerMistral(inviteDemo), MODELE, true);
       return reponse({
         ok: true,
         mode: 'demonstration',
@@ -233,7 +262,7 @@ Deno.serve(async (req) => {
       payload,
       calculerAgregats(payload),
     );
-    const contenu = await appelerMistral(invite);
+    const contenu = apposerMention(await appelerMistral(invite), MODELE, false);
 
     // --- 6. Enregistrement en BROUILLON ---------------------------------
     // Le trigger trg_verifier_rapport_llm_autorise revérifie ici le drapeau :
