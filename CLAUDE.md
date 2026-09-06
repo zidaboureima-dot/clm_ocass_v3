@@ -75,6 +75,42 @@ volontairement** :
 L'interface Flutter ne fait que filtrer l'affichage des boutons. **La base
 fait foi.**
 
+### Aucun travail programmé — l'escalade est humaine
+
+*Vérifié le 5 septembre 2026. À ne pas redécouvrir.*
+
+**Rien ne tourne sur une horloge dans ce projet.** Pas de `pg_cron`, pas de
+`cron.schedule`, aucun workflow CI programmé. Les six Edge Functions sont
+toutes déclenchées à la demande :
+
+| Fonction | Déclencheur |
+|---|---|
+| `clever-service` | Webhook de base (trigger `notify_signalements`), clé `x-shared-key` |
+| `quick-endpoint` | Appel depuis l'app, JWT admin |
+| `quick-task` | Appel depuis l'app, utilisateur déconnecté |
+| `rapid-action` | Appel depuis l'app, JWT admin |
+| `super-worker` | Requêtes HTTP du site vitrine, clé `x-site-key` |
+| `rapport-periodique` | Conçue pour l'être, mais **non planifiée** et drapeau à `false` |
+
+Il n'existe non plus **aucune escalade différée** : ni relance automatique, ni
+détection de cas sans réponse au-delà d'un délai. La seule automatisation est
+l'email envoyé au superviseur **au moment où** un signalement est inséré.
+
+Conséquence à garder en tête avant toute proposition d'automatisation ou de
+supervision : **un signalement cesse d'être escaladé si une personne s'arrête,
+pas si un planificateur s'arrête.** Une sonde de type « le planificateur
+tourne-t-il » surveillerait une machinerie inexistante et répondrait toujours
+la même chose — sur un dispositif de signalement de refus de soins, une
+supervision qui rassure à tort est pire que pas de supervision.
+
+Les trois défaillances réellement silencieuses sont : la chaîne
+webhook → `clever-service` qui casse (plus personne n'est prévenu), une région
+sans superviseur actif (le signalement n'a pas de destinataire), et un
+superviseur qui cesse d'agir. Symptôme commun et mesurable : **un signalement
+qui reste en statut `nouveau` au-delà d'un délai raisonnable**. Contrepartie
+assumée d'un tel indicateur : il révèle l'activité de signalement, ce que le
+dispositif cherche par ailleurs à ne pas exposer.
+
 ---
 
 ## 3. Invariants de sécurité — ne jamais casser
