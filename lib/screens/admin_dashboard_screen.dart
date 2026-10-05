@@ -17,6 +17,7 @@ import 'stats_body.dart';
 import 'admin_demandes_reset_tab.dart';
 import '../services/demande_reset_service.dart';
 import '../widgets/etat_erreur.dart';
+import '../widgets/bandeau_historique.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   final UserProfile profil;
@@ -217,6 +218,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                BandeauHistorique(profil: widget.profil),
                 Expanded(
                   child: StreamBuilder<List<Signalement>>(
                     stream: _stream,
@@ -303,7 +305,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
             const AdminCategoriesTab(),
             StatsBody(
-              stream: SignalementService().streamToutesSignalements(),
+              stream: SignalementService().streamToutesSignalementsPourStats(),
               description: 'Vue nationale, toutes régions confondues.',
             ),
             const AdminAccountsTab(),

@@ -11,6 +11,35 @@ class SignalementService {
 
   factory SignalementService() => _instance;
 
+  /// Nombre de signalements que les flux temps réel rapportent au plus.
+  ///
+  /// POURQUOI BORNER
+  ///   Sans limite, chaque tableau de bord ouvre un flux sur la table entière.
+  ///   À 59 signalements tout va bien ; à 2 000, un superviseur sur un
+  ///   téléphone modeste en 3G attend ; à 10 000, l'écran administrateur
+  ///   devient inutilisable. Rien n'alerte entre-temps : ça ne casse pas, ça
+  ///   ralentit — et le profil d'appareil et de connexion visé par le projet
+  ///   est précisément celui qui encaisse le moins bien.
+  ///
+  /// CE QUE `limit` FAIT RÉELLEMENT
+  ///   Vérifié dans supabase_stream_builder.dart (paquet `supabase` 2.14.0,
+  ///   version verrouillée par pubspec.lock) : la limite est appliquée
+  ///   CÔTÉ SERVEUR sur la requête initiale, puis ré-appliquée côté client à
+  ///   chaque émission. Ce n'est donc pas un simple rognage d'affichage : la
+  ///   charge réseau est réellement réduite.
+  ///
+  /// CONSÉQUENCE À NE PAS OUBLIER
+  ///   Les écrans filtrent le statut CÔTÉ CLIENT. Sur un flux borné, un filtre
+  ///   « Clôturé » ne cherche donc que parmi les plus récents. Tout écran qui
+  ///   consomme ces flux DOIT dire qu'il est tronqué et renvoyer vers
+  ///   l'historique, sans quoi il affiche trois cas en laissant croire qu'il
+  ///   n'y en a que trois. L'exhaustivité passe par `obtenirHistorique()`.
+  static const int limiteFluxTempsReel = 100;
+
+  /// Taille d'une page d'historique. Volontairement modeste : la cible est un
+  /// appareil d'entrée de gamme sur une connexion lente.
+  static const int taillePageHistorique = 25;
+
   Future<void> creerSignalement(Signalement signalement) async {
   try {
     final data = signalement.toJson();
@@ -50,6 +79,7 @@ class SignalementService {
         .from('signalements')
         .stream(primaryKey: ['id'])
         .order('soumis_le', ascending: false)
+        .limit(limiteFluxTempsReel)
         .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
   }
 
@@ -59,10 +89,48 @@ class SignalementService {
         .stream(primaryKey: ['id'])
         .eq('region', region)
         .order('soumis_le', ascending: false)
+        .limit(limiteFluxTempsReel)
         .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
   }
 
-  Stream<List<Signalement>> streamSignalementsParPrefecture(String prefecture) {
+  // =====================================================================
+  // FLUX NON BORNÉS — RÉSERVÉS AUX ÉCRANS DE STATISTIQUES
+  //
+  // POURQUOI ILS EXISTENT SÉPARÉMENT
+  //   Les écrans de statistiques comptent. Un comptage sur un flux borné aux
+  //   100 plus récents afficherait des chiffres faux sans rien signaler —
+  //   « 12 clôturés » au lieu de 400. Mieux vaut un écran lent qu'un écran
+  //   qui ment.
+  //
+  //   Les tableaux de bord, eux, affichent une liste de travail : la tronquer
+  //   est acceptable dès lors que la troncature est dite et que l'historique
+  //   complet reste accessible.
+  //
+  // DETTE ASSUMÉE
+  //   La bonne réponse est une agrégation CÔTÉ SERVEUR, comme la vue
+  //   `stats_publiques` le fait déjà pour le public — mais par périmètre, et
+  //   avec le cloisonnement RLS qui va avec. Tant qu'elle n'existe pas, ces
+  //   flux restent le chemin lourd du dispositif. Voir DETTES_SAAS.md.
+  // =====================================================================
+
+  Stream<List<Signalement>> streamToutesSignalementsPourStats() {
+    return SupabaseConfig.client
+        .from('signalements')
+        .stream(primaryKey: ['id'])
+        .order('soumis_le', ascending: false)
+        .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
+  }
+
+  Stream<List<Signalement>> streamSignalementsParRegionPourStats(String region) {
+    return SupabaseConfig.client
+        .from('signalements')
+        .stream(primaryKey: ['id'])
+        .eq('region', region)
+        .order('soumis_le', ascending: false)
+        .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
+  }
+
+  Stream<List<Signalement>> streamSignalementsParPrefecturePourStats(String prefecture) {
     return SupabaseConfig.client
         .from('signalements')
         .stream(primaryKey: ['id'])
@@ -77,7 +145,58 @@ class SignalementService {
         .stream(primaryKey: ['id'])
         .eq('assignee_uid', pointFocalUid)
         .order('soumis_le', ascending: false)
+        .limit(limiteFluxTempsReel)
         .map((rows) => rows.map((r) => Signalement.fromJson(r)).toList());
+  }
+
+  /// Historique paginé, interrogé ponctuellement — sans temps réel.
+  ///
+  /// POURQUOI UN CHEMIN SÉPARÉ DES FLUX
+  ///   Un flux Supabase n'accepte qu'UN SEUL filtre serveur, déjà pris par
+  ///   `region` chez le superviseur et `assignee_uid` chez le point focal. Le
+  ///   statut ne peut donc pas y être filtré côté serveur, et un flux borné
+  ///   filtré côté client ment dès qu'on cherche autre chose que du récent.
+  ///
+  ///   Une requête ordinaire n'a pas cette limite : tous les filtres sont
+  ///   appliqués par le serveur, et `range()` ne rapporte qu'une page. C'est
+  ///   ce qui rend l'historique à la fois exhaustif et léger.
+  ///
+  /// CE QU'ON PERD, ET POURQUOI C'EST ACCEPTABLE
+  ///   Pas de mise à jour automatique. L'historique se consulte, il n'a pas
+  ///   besoin de bouger sous les yeux — contrairement aux cas ouverts, qui
+  ///   restent sur le flux temps réel.
+  ///
+  /// LE CLOISONNEMENT RESTE CELUI DU RLS
+  ///   Les filtres ci-dessous servent le confort de lecture, PAS la sécurité.
+  ///   Le périmètre réellement opposable est celui des policies RLS sur
+  ///   `signalements` (voir `region_du_demandeur()`). Ne jamais raisonner
+  ///   l'inverse : un filtre oublié ici n'ouvre rien, mais une policy manquante
+  ///   ouvrirait tout.
+  Future<List<Signalement>> obtenirHistorique({
+    String? region,
+    String? prefecture,
+    String? assigneeUid,
+    String? statut,
+    int page = 0,
+    int taille = taillePageHistorique,
+  }) async {
+    try {
+      var requete = SupabaseConfig.client.from('signalements').select();
+
+      if (region != null) requete = requete.eq('region', region);
+      if (prefecture != null) requete = requete.eq('prefecture', prefecture);
+      if (assigneeUid != null) requete = requete.eq('assignee_uid', assigneeUid);
+      if (statut != null) requete = requete.eq('statut', statut);
+
+      final debut = page * taille;
+      final reponse = await requete
+          .order('soumis_le', ascending: false)
+          .range(debut, debut + taille - 1);
+
+      return (reponse as List).map((json) => Signalement.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Erreur récupération historique: $e');
+    }
   }
 
   Future<void> mettreAJourStatut(String signalementId, String statut) async {

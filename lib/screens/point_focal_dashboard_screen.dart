@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import 'signalement_detail_screen.dart';
 import 'change_password_screen.dart';
 import 'stats_body.dart';
+import '../widgets/bandeau_historique.dart';
 import '../widgets/etat_erreur.dart';
 
 class PointFocalDashboardScreen extends StatefulWidget {
@@ -81,7 +82,7 @@ class _PointFocalDashboardScreenState extends State<PointFocalDashboardScreen> {
                   builder: (context) => Scaffold(
                     appBar: AppBar(title: Text('Statistiques — ${widget.profil.prefecture ?? ''}')),
                     body: StatsBody(
-                      stream: SignalementService().streamSignalementsParPrefecture(widget.profil.prefecture ?? ''),
+                      stream: SignalementService().streamSignalementsParPrefecturePourStats(widget.profil.prefecture ?? ''),
                       description: 'Vue préfectorale : ${widget.profil.prefecture ?? ''}, tous les signalements (pas seulement ceux qui vous sont assignés).',
                       afficherRepartitionRegion: false,
                     ),
@@ -143,6 +144,7 @@ class _PointFocalDashboardScreenState extends State<PointFocalDashboardScreen> {
             ),
           ),
           const SizedBox(height: 8),
+          BandeauHistorique(profil: widget.profil),
           Expanded(
             child: StreamBuilder<List<Signalement>>(
               stream: _stream,

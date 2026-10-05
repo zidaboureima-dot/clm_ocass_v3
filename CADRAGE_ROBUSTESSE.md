@@ -1,7 +1,8 @@
 # Cadrage — Robustesse avant distribution
 
-**Statut :** points 1 (mode maintenance) et 2 (états d'erreur) **mis en
-œuvre** le 5 octobre 2026. Points 3 à 5 au stade du cadrage.
+**Statut :** points 1 (mode maintenance), 2 (états d'erreur) et 3
+(pagination) **mis en œuvre** le 5 octobre 2026. Restent les points 4
+(tolérance réseau) et 5 (vérification des états vides).
 **Date :** 5 octobre 2026. Constat établi au commit `5e70f46`.
 
 Ce document cadre cinq points de robustesse soulevés avant la distribution de
@@ -34,7 +35,7 @@ disproportionnée :
 | Mode maintenance | ~~**Absent.** Aucun interrupteur, aucun drapeau~~ → **fait** le 5 octobre 2026 (§3.5) |
 | États d'erreur | ~~**Partiel.**~~ → **fait** le 5 octobre 2026 (§5). Le constat initial était optimiste : voir ci-dessous |
 | États vides | **Fait.** 16 messages couvrant les listes qui comptent |
-| Pagination serveur | **Absente.** Aucun `.range()`, aucun `.limit()` |
+| Pagination serveur | ~~**Absente.**~~ → **fait** le 5 octobre 2026 (§4.4) |
 | Tolérance réseau | **Absente.** Ni détection de coupure, ni réessai |
 
 **Détail sur les états d'erreur — le constat initial était trop optimiste.**
@@ -214,6 +215,52 @@ Tableaux de bord administrateur, superviseur, point focal, et liste des
 comptes. Les annotations et actions menées d'un cas ne sont pas concernées :
 leur volume est borné par le cas lui-même.
 
+### 4.4 Mise en œuvre — faite le 5 octobre 2026
+
+**Ce que `limit()` fait réellement, vérifié.** Dans
+`supabase_stream_builder.dart` du paquet `supabase` 2.14.0 — la version que
+verrouille `pubspec.lock` — la limite est appliquée **côté serveur** sur la
+requête initiale, puis ré-appliquée côté client à chaque émission. Borner un
+flux réduit donc réellement la charge réseau ; ce n'est pas un rognage
+d'affichage. Ce point conditionnait tout le reste, il ne pouvait pas rester une
+supposition.
+
+**La contrainte qui a changé la forme retenue.** Un flux Supabase n'accepte
+**qu'un seul filtre serveur**, déjà pris par `region` chez le superviseur et
+`assignee_uid` chez le point focal. Le statut ne peut donc pas y être filtré
+côté serveur — le cadrage du matin supposait à tort qu'on pourrait borner sur
+« cas ouverts ». Les filtres de statut des tableaux de bord restent donc
+**côté client**, à l'intérieur de la fenêtre des 100 plus récents.
+
+**Conséquence, et la seule réponse honnête.** Une liste tronquée qui ne le dit
+pas est un mensonge d'interface : filtrer sur « Clôturé » peut afficher trois
+cas alors qu'il en existe quatre cents, et l'utilisateur ne compte pas les
+lignes, il fait confiance à ce qu'il voit. D'où `BandeauHistorique`, affiché en
+permanence sous les filtres — **pas seulement quand la troncature mord**, pour
+que personne n'ait à se demander dans quel régime il se trouve.
+
+**L'historique.** `HistoriqueSignalementsScreen` interroge le serveur par
+pages de 25, avec tous les filtres appliqués côté serveur, et sans temps réel.
+Le périmètre y suit le rôle, mais ces filtres servent le confort de lecture :
+**le périmètre opposable reste celui des policies RLS.** Un filtre oublié
+n'ouvre rien ; une policy manquante ouvrirait tout.
+
+### 4.5 L'effet de bord qu'il ne fallait pas laisser passer
+
+`streamSignalementsParRegion` et `streamSignalementsParPrefecture`
+n'alimentaient pas que les tableaux de bord : **les écrans de statistiques
+consommaient les mêmes méthodes.** Les borner aurait fait afficher
+« 12 clôturés » au lieu de 400, sans rien signaler.
+
+Trois flux explicitement non bornés ont donc été isolés —
+`streamToutesSignalementsPourStats`, `…ParRegionPourStats`,
+`…ParPrefecturePourStats` — et le suffixe dit pourquoi ils échappent à la
+règle. Mieux vaut un écran lent qu'un écran qui ment.
+
+Ils restent le chemin le plus lourd du dispositif. La vraie réponse est une
+agrégation côté serveur, inscrite en **dette n°9** dans `DETTES_SAAS.md` plutôt
+que laissée implicite.
+
 ---
 
 ## 5. États d'erreur — fait le 5 octobre 2026
@@ -330,7 +377,8 @@ et exposer leurs auteurs — il ne se tranche pas sans données de terrain.
    le reste moins risqué.
 2. ~~**États d'erreur**~~ — **fait le 5 octobre 2026.** Widget partagé, dix
    branchements, et surtout l'ordre des tests corrigé dans les douze builders.
-3. **Pagination** — le plus de travail, mais le seul qui se dégrade seul.
+3. ~~**Pagination**~~ — **fait le 5 octobre 2026.** Le plus de travail, et le
+   seul qui se dégradait tout seul sans jamais rien casser.
 4. **Tolérance réseau**, niveaux 1 et 2 — réessai en mémoire et message franc.
 5. **États vides** — vérification après la pagination.
 

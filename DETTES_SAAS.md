@@ -149,6 +149,34 @@ multi-tenant, l'audit à la main de chaque pays n'est plus praticable.
 
 ---
 
+## 9. Agrégation des statistiques côté serveur
+
+**Dette (performance et justesse, notée le 5 octobre 2026 en bornant les flux
+des tableaux de bord).** Les écrans de statistiques régionale et préfectorale
+calculent leurs comptages **dans l'application**, à partir d'un flux temps réel
+qui rapporte toutes les lignes du périmètre :
+`streamToutesSignalementsPourStats`, `streamSignalementsParRegionPourStats`,
+`streamSignalementsParPrefecturePourStats`.
+
+Ces trois flux sont les seuls du projet volontairement **non bornés**, et le
+nom le dit. Les borner ferait afficher « 12 clôturés » au lieu de 400, sans
+rien signaler : mieux vaut un écran lent qu'un écran qui ment. Mais ils
+restent, de ce fait, le chemin le plus lourd du dispositif — exactement sur le
+profil d'appareil et de connexion que le projet vise.
+
+**Cible.** Une vue d'agrégats **par périmètre**, sur le modèle de
+`stats_publiques` (`20260811_securite_rls.sql`) qui joue déjà ce rôle au niveau
+national : comptages par statut, nature et catégorie, regroupés par région et
+préfecture. L'application lirait des nombres au lieu de lignes.
+
+**Point d'attention.** `stats_publiques` s'exécute en `security_invoker =
+false` parce que ses agrégats sont publics par construction. Une vue par
+périmètre est plus fine : elle doit soit respecter le cloisonnement RLS, soit
+démontrer que ses agrégats ne réidentifient rien. Ce n'est pas un copier-coller
+de la vue existante.
+
+---
+
 ## Rappel des mécanismes déjà en place (à répliquer par tenant)
 
 Ces éléments sont déjà sécurisés en mono-pays et devront être **répliqués /

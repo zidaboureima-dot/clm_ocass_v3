@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import 'signalement_detail_screen.dart';
 import 'change_password_screen.dart';
 import 'stats_body.dart';
+import '../widgets/bandeau_historique.dart';
 import '../widgets/etat_erreur.dart';
 
 class SuperviseurDashboardScreen extends StatefulWidget {
@@ -81,7 +82,7 @@ class _SuperviseurDashboardScreenState extends State<SuperviseurDashboardScreen>
                   builder: (context) => Scaffold(
                     appBar: AppBar(title: Text('Statistiques — ${widget.profil.region ?? ''}')),
                     body: StatsBody(
-                      stream: SignalementService().streamSignalementsParRegion(widget.profil.region ?? ''),
+                      stream: SignalementService().streamSignalementsParRegionPourStats(widget.profil.region ?? ''),
                       description: 'Vue régionale : ${widget.profil.region ?? ''}.',
                       afficherRepartitionRegion: false,
                     ),
@@ -143,6 +144,7 @@ class _SuperviseurDashboardScreenState extends State<SuperviseurDashboardScreen>
             ),
           ),
           const SizedBox(height: 8),
+          BandeauHistorique(profil: widget.profil, peutAssigner: true),
           Expanded(
             child: StreamBuilder<List<Signalement>>(
               stream: _stream,

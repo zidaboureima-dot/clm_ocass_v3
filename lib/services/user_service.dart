@@ -27,6 +27,10 @@ class UserService {
         .from('users')
         .stream(primaryKey: ['id'])
         .order('nom', ascending: true)
+        // Borne de sécurité. Le nombre de comptes encadrants croît lentement
+        // — 9 régions, 44 préfectures — mais un flux non borné sur `users`
+        // resterait une requête sans plafond, et rien ne la surveillerait.
+        .limit(300)
         .map((rows) => rows
             .where((r) => r['role'] == 'superviseur' || r['role'] == 'point_focal')
             .map((r) => UserProfile.fromJson(r))
