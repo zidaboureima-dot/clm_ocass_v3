@@ -16,6 +16,7 @@ import 'signalement_detail_screen.dart';
 import 'stats_body.dart';
 import 'admin_demandes_reset_tab.dart';
 import '../services/demande_reset_service.dart';
+import '../widgets/etat_erreur.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   final UserProfile profil;
@@ -41,6 +42,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   void initState() {
     super.initState();
     _stream = SignalementService().streamToutesSignalements();
+  }
+
+  /// Reconstruit le flux. Un flux Supabase interrompu ne reprend pas de
+  /// lui-même : il faut en ouvrir un nouveau, d'où la réaffectation plutôt
+  /// qu'un simple setState.
+  void _recharger() {
+    setState(() {
+      _stream = SignalementService().streamToutesSignalements();
+    });
   }
 
   Color _couleurNature(String nature) {
@@ -211,11 +221,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   child: StreamBuilder<List<Signalement>>(
                     stream: _stream,
                     builder: (context, snapshot) {
+                      // L'ERREUR SE TESTE AVANT hasData, ET L'ORDRE N'EST PAS
+                      // INDIFFÉRENT : en erreur, hasData est faux. Tester
+                      // hasData d'abord renvoyait le chargeur et rendait la
+                      // branche d'erreur inatteignable — elle existait, elle
+                      // ne s'affichait jamais.
+                      if (snapshot.hasError) {
+                        return EtatErreur(
+                          message: 'Les signalements n\'ont pas pu être chargés.',
+                          onReessayer: _recharger,
+                        );
+                      }
                       if (!snapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return Center(child: Text('Erreur : ${snapshot.error}'));
                       }
                       var signalements = snapshot.data!;
                       if (_filtreStatut != 'tous') {

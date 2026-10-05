@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import 'signalement_detail_screen.dart';
 import 'change_password_screen.dart';
 import 'stats_body.dart';
+import '../widgets/etat_erreur.dart';
 
 class PointFocalDashboardScreen extends StatefulWidget {
   final UserProfile profil;
@@ -31,6 +32,14 @@ class _PointFocalDashboardScreenState extends State<PointFocalDashboardScreen> {
   void initState() {
     super.initState();
     _stream = SignalementService().streamSignalementsAssignes(widget.profil.id);
+  }
+
+  /// Reconstruit le flux. Un flux Supabase interrompu ne reprend pas de
+  /// lui-même : il faut en ouvrir un nouveau.
+  void _recharger() {
+    setState(() {
+      _stream = SignalementService().streamSignalementsAssignes(widget.profil.id);
+    });
   }
 
   Color _couleurNature(String nature) {
@@ -138,11 +147,17 @@ class _PointFocalDashboardScreenState extends State<PointFocalDashboardScreen> {
             child: StreamBuilder<List<Signalement>>(
               stream: _stream,
               builder: (context, snapshot) {
+                // L'erreur se teste AVANT hasData : en erreur, hasData est
+                // faux, donc l'ordre inverse rendait cette branche
+                // inatteignable.
+                if (snapshot.hasError) {
+                  return EtatErreur(
+                    message: 'Vos signalements assignés n\'ont pas pu être chargés.',
+                    onReessayer: _recharger,
+                  );
+                }
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Erreur : ${snapshot.error}'));
                 }
                 var signalements = snapshot.data!;
                 if (_filtreStatut != 'tous') {

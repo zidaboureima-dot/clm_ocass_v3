@@ -3,6 +3,7 @@ import 'package:audioplayers/audioplayers.dart';
 import '../models/message_vocal_brut_model.dart';
 import '../services/message_vocal_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/etat_erreur.dart';
 import 'traiter_message_vocal_screen.dart';
 
 class AdminMessagesVocauxTab extends StatefulWidget {
@@ -22,6 +23,14 @@ class _AdminMessagesVocauxTabState extends State<AdminMessagesVocauxTab> {
   void initState() {
     super.initState();
     _stream = MessageVocalService().streamMessagesNonTraites();
+  }
+
+  /// Reconstruit le flux. Un flux Supabase interrompu ne reprend pas de
+  /// lui-même : il faut en ouvrir un nouveau.
+  void _recharger() {
+    setState(() {
+      _stream = MessageVocalService().streamMessagesNonTraites();
+    });
   }
 
   @override
@@ -56,6 +65,13 @@ class _AdminMessagesVocauxTabState extends State<AdminMessagesVocauxTab> {
     return StreamBuilder<List<MessageVocalBrut>>(
       stream: _stream,
       builder: (context, snapshot) {
+        // L'erreur se teste avant hasData : en erreur, hasData est faux.
+        if (snapshot.hasError) {
+          return EtatErreur(
+            message: 'Les messages vocaux n\'ont pas pu être chargés.',
+            onReessayer: _recharger,
+          );
+        }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }

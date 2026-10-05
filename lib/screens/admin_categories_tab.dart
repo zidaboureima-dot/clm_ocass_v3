@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/categorie_model.dart';
 import '../services/categorie_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/etat_erreur.dart';
 
 class AdminCategoriesTab extends StatefulWidget {
   const AdminCategoriesTab({super.key});
@@ -17,6 +18,14 @@ class _AdminCategoriesTabState extends State<AdminCategoriesTab> {
   void initState() {
     super.initState();
     _stream = CategorieService().streamToutesCategories();
+  }
+
+  /// Reconstruit le flux. Un flux Supabase interrompu ne reprend pas de
+  /// lui-même : il faut en ouvrir un nouveau.
+  void _recharger() {
+    setState(() {
+      _stream = CategorieService().streamToutesCategories();
+    });
   }
 
   Future<void> _ouvrirDialogueAjout(List<Categorie> categoriesExistantes) async {
@@ -107,11 +116,16 @@ class _AdminCategoriesTabState extends State<AdminCategoriesTab> {
     return StreamBuilder<List<Categorie>>(
       stream: _stream,
       builder: (context, snapshot) {
+        // L'erreur se teste AVANT hasData : en erreur, hasData est faux, donc
+        // l'ordre inverse rendait cette branche inatteignable.
+        if (snapshot.hasError) {
+          return EtatErreur(
+            message: 'Les catégories n\'ont pas pu être chargées.',
+            onReessayer: _recharger,
+          );
+        }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text('Erreur : ${snapshot.error}'));
         }
         final categories = snapshot.data!;
         final parGroupe = <String, List<Categorie>>{};

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/photo_brute_model.dart';
 import '../services/photo_brute_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/etat_erreur.dart';
 import 'traiter_photo_screen.dart';
 
 class AdminPhotosTab extends StatefulWidget {
@@ -21,11 +22,26 @@ class _AdminPhotosTabState extends State<AdminPhotosTab> {
     _stream = PhotoBruteService().streamPhotosNonTraitees();
   }
 
+  /// Reconstruit le flux. Un flux Supabase interrompu ne reprend pas de
+  /// lui-même : il faut en ouvrir un nouveau.
+  void _recharger() {
+    setState(() {
+      _stream = PhotoBruteService().streamPhotosNonTraitees();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<PhotoBrute>>(
       stream: _stream,
       builder: (context, snapshot) {
+        // L'erreur se teste avant hasData : en erreur, hasData est faux.
+        if (snapshot.hasError) {
+          return EtatErreur(
+            message: 'Les photos n\'ont pas pu être chargées.',
+            onReessayer: _recharger,
+          );
+        }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }

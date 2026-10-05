@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/demande_reset_model.dart';
 import '../services/demande_reset_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/etat_erreur.dart';
 
 class AdminDemandesResetTab extends StatefulWidget {
   const AdminDemandesResetTab({super.key});
@@ -19,16 +20,29 @@ class _AdminDemandesResetTabState extends State<AdminDemandesResetTab> {
     _stream = DemandeResetService().streamDemandesEnAttente();
   }
 
+  /// Reconstruit le flux. Un flux Supabase interrompu ne reprend pas de
+  /// lui-même : il faut en ouvrir un nouveau.
+  void _recharger() {
+    setState(() {
+      _stream = DemandeResetService().streamDemandesEnAttente();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<DemandeReset>>(
       stream: _stream,
       builder: (context, snapshot) {
+        // L'erreur se teste AVANT hasData : en erreur, hasData est faux, donc
+        // l'ordre inverse rendait cette branche inatteignable.
+        if (snapshot.hasError) {
+          return EtatErreur(
+            message: 'Les demandes de réinitialisation n\'ont pas pu être chargées.',
+            onReessayer: _recharger,
+          );
+        }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text('Erreur : ${snapshot.error}'));
         }
         final demandes = snapshot.data!;
         if (demandes.isEmpty) {

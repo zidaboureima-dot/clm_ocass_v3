@@ -3,6 +3,7 @@ import '../data/regions_prefectures.dart';
 import '../models/user_profile_model.dart';
 import '../services/user_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/etat_erreur.dart';
 
 class AdminAccountsTab extends StatefulWidget {
   const AdminAccountsTab({super.key});
@@ -18,6 +19,14 @@ class _AdminAccountsTabState extends State<AdminAccountsTab> {
   void initState() {
     super.initState();
     _stream = UserService().streamComptesGeres();
+  }
+
+  /// Reconstruit le flux. Un flux Supabase interrompu ne reprend pas de
+  /// lui-même : il faut en ouvrir un nouveau.
+  void _recharger() {
+    setState(() {
+      _stream = UserService().streamComptesGeres();
+    });
   }
 
   Future<void> _ouvrirDialogueCreation() async {
@@ -171,6 +180,13 @@ class _AdminAccountsTabState extends State<AdminAccountsTab> {
       body: StreamBuilder<List<UserProfile>>(
         stream: _stream,
         builder: (context, snapshot) {
+          // L'erreur se teste avant hasData : en erreur, hasData est faux.
+          if (snapshot.hasError) {
+            return EtatErreur(
+              message: 'La liste des comptes n\'a pas pu être chargée.',
+              onReessayer: _recharger,
+            );
+          }
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }

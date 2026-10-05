@@ -1,7 +1,7 @@
 # Cadrage — Robustesse avant distribution
 
-**Statut :** point 1 (mode maintenance) **mis en œuvre** le 5 octobre 2026.
-Points 2 à 5 au stade du cadrage.
+**Statut :** points 1 (mode maintenance) et 2 (états d'erreur) **mis en
+œuvre** le 5 octobre 2026. Points 3 à 5 au stade du cadrage.
 **Date :** 5 octobre 2026. Constat établi au commit `5e70f46`.
 
 Ce document cadre cinq points de robustesse soulevés avant la distribution de
@@ -32,13 +32,22 @@ disproportionnée :
 | Point | État |
 | --- | --- |
 | Mode maintenance | ~~**Absent.** Aucun interrupteur, aucun drapeau~~ → **fait** le 5 octobre 2026 (§3.5) |
-| États d'erreur | **Partiel.** 8 `hasError` traités sur 16 builders |
+| États d'erreur | ~~**Partiel.**~~ → **fait** le 5 octobre 2026 (§5). Le constat initial était optimiste : voir ci-dessous |
 | États vides | **Fait.** 16 messages couvrant les listes qui comptent |
 | Pagination serveur | **Absente.** Aucun `.range()`, aucun `.limit()` |
 | Tolérance réseau | **Absente.** Ni détection de coupure, ni réessai |
 
-**Détail sur les états d'erreur.** Les builders non protégés suivent ce
-schéma :
+**Détail sur les états d'erreur — le constat initial était trop optimiste.**
+
+Le dénombrement du 5 octobre au matin comptait « 8 `hasError` sur 16
+builders ». Le décompte exact est **12 builders**, et surtout : parmi les sept
+qui testaient `hasError`, **cinq ne l'atteignaient jamais.**
+
+Deux schémas défaillants, pas un seul :
+
+*Schéma A — aucune branche d'erreur* (5 builders : `admin_accounts_tab`,
+`admin_messages_vocaux_tab`, `admin_photos_tab`, `signalement_detail_screen`
+×2) :
 
 ```dart
 if (!snapshot.hasData) {
@@ -46,16 +55,33 @@ if (!snapshot.hasData) {
 }
 ```
 
-En cas d'erreur, `hasData` est faux et aucune branche ne la récupère :
-**l'indicateur de chargement tourne indéfiniment.** Neuf builders sont dans ce
-cas, sur cinq écrans : `admin_accounts_tab`, `admin_dashboard_screen` (3 sur
-4), `admin_messages_vocaux_tab`, `admin_photos_tab`, et
-`signalement_detail_screen` (2) — ce dernier étant l'écran des actions menées
-et des annotations.
+*Schéma B — branche d'erreur inatteignable* (5 builders :
+`admin_dashboard_screen`, `superviseur_dashboard_screen`,
+`point_focal_dashboard_screen`, `admin_categories_tab`,
+`admin_demandes_reset_tab`) :
 
-En contexte de connexion instable, c'est le pire retour possible : un
-chargement perpétuel est indiscernable d'une lenteur, donc l'utilisateur
-attend au lieu de réessayer.
+```dart
+if (!snapshot.hasData) {
+  return const Center(child: CircularProgressIndicator());   // ← sort ici
+}
+if (snapshot.hasError) {
+  return Center(child: Text('Erreur : ${snapshot.error}'));  // ← jamais atteint
+}
+```
+
+**En erreur, `hasData` est faux.** Le premier test sort donc avec le chargeur,
+et la branche d'erreur est du code mort. Elle existe, elle se relit comme une
+protection lors d'une revue, et elle ne s'affiche jamais. C'est pire que son
+absence : elle rassure.
+
+Résultat identique dans les deux cas : **l'indicateur de chargement tourne
+indéfiniment.** En contexte de connexion instable, c'est le pire retour
+possible — un chargement perpétuel est indiscernable d'une lenteur, donc
+l'utilisateur attend au lieu de réessayer.
+
+Deux builders étaient corrects : `stats_body.dart` et `stats_body_public.dart`
+— les deux écrans citoyens, testés en premier, et les seuls où l'ordre avait
+été écrit dans le bon sens.
 
 ---
 
@@ -190,22 +216,51 @@ leur volume est borné par le cas lui-même.
 
 ---
 
-## 5. États d'erreur
+## 5. États d'erreur — fait le 5 octobre 2026
 
-Un widget partagé plutôt que neuf variantes : message compréhensible, bouton
-de réessai, et distinction entre trois situations que l'utilisateur ne doit
-pas confondre :
+`lib/widgets/etat_erreur.dart` : un widget partagé plutôt que dix variantes.
+Il distingue trois situations que l'utilisateur ne doit pas confondre :
 
 - **chargement** — en cours, patienter ;
 - **vide** — tout va bien, il n'y a rien à afficher ;
 - **erreur** — quelque chose a échoué, voici quoi faire.
 
-Aujourd'hui la troisième est absorbée par la première, ce qui est le pire des
-mélanges.
+Avant, la troisième était absorbée par la première — le pire des mélanges.
 
-Les messages s'adressent à des points focaux, pas à des développeurs : « La
-connexion au serveur a échoué. Vérifiez votre connexion et réessayez. » plutôt
-que le texte brut de l'exception.
+### 5.1 L'ordre des tests est la correction de fond
+
+`hasError` se teste **avant** `hasData`, dans les douze builders. C'est la
+part la plus importante du changement, et la moins visible : cinq branches
+d'erreur existaient déjà et n'étaient jamais atteintes (§2).
+
+### 5.2 Le texte de l'exception n'est plus affiché
+
+Les écrans montraient `Erreur : ${snapshot.error}`. Deux raisons d'arrêter :
+
+1. Le destinataire est un point focal ou un superviseur, pas un développeur.
+   « PostgrestException(message: JWT expired…) » ne lui dit pas quoi faire.
+2. Le texte d'une exception Postgrest cite des noms de tables, de colonnes et
+   de policies. C'est de l'information sur l'architecture, affichée sur un
+   appareil qui peut être consulté par un tiers.
+
+Le diagnostic appartient aux journaux du serveur, pas à l'écran.
+
+### 5.3 Le réessai reconstruit le flux
+
+Un flux Supabase interrompu ne reprend pas de lui-même. Chaque écran concerné
+expose donc un `_recharger()` qui **réaffecte** `_stream` dans un `setState`,
+plutôt qu'un simple rafraîchissement d'affichage qui ne rouvrirait rien.
+
+Sur `signalement_detail_screen`, les flux sont construits dans `build()` : un
+`setState(() {})` suffit, et l'erreur s'affiche en version compacte — le reste
+de l'écran s'est affiché correctement, seule une section a échoué.
+
+### 5.4 Ce qui n'a pas été touché
+
+`stats_body.dart` et `stats_body_public.dart`, déjà corrects, gardent leur
+formulation (« Statistiques momentanément indisponibles ») et leur propre
+bouton de réessai. Ce sont les écrans citoyens : les uniformiser pour la seule
+cohérence aurait ajouté du risque sans rien apporter.
 
 ---
 
@@ -273,7 +328,8 @@ et exposer leurs auteurs — il ne se tranche pas sans données de terrain.
 1. ~~**Mode maintenance**~~ — **fait le 5 octobre 2026.** Peu de code,
    infrastructure déjà présente, et c'est le filet de sécurité qui rend tout
    le reste moins risqué.
-2. **États d'erreur** — une demi-journée, widget partagé, neuf branchements.
+2. ~~**États d'erreur**~~ — **fait le 5 octobre 2026.** Widget partagé, dix
+   branchements, et surtout l'ordre des tests corrigé dans les douze builders.
 3. **Pagination** — le plus de travail, mais le seul qui se dégrade seul.
 4. **Tolérance réseau**, niveaux 1 et 2 — réessai en mémoire et message franc.
 5. **États vides** — vérification après la pagination.

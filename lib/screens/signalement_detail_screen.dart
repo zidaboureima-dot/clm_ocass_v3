@@ -9,6 +9,7 @@ import '../services/photo_service.dart';
 import '../services/signalement_service.dart';
 import '../services/user_service.dart';
 import '../widgets/contacts_chaine_widget.dart';
+import '../widgets/etat_erreur.dart';
 import '../theme/app_colors.dart';
 import 'documentation_statut_dialog.dart';
 
@@ -393,6 +394,17 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
           StreamBuilder<List<ActionMenee>>(
             stream: ActionMeneeService().streamActions(s.id!),
             builder: (context, snapshot) {
+              // Erreur AVANT hasData, et affichage compact : le reste de
+              // l'écran s'est affiché, seule cette section a échoué. Le
+              // réessai est un simple setState — le flux est construit dans
+              // build(), donc reconstruire l'écran rouvre le flux.
+              if (snapshot.hasError) {
+                return EtatErreur(
+                  compact: true,
+                  message: 'Les actions menées n\'ont pas pu être chargées.',
+                  onReessayer: () => setState(() {}),
+                );
+              }
               if (!snapshot.hasData) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
@@ -466,6 +478,15 @@ class _SignalementDetailScreenState extends State<SignalementDetailScreen> {
           StreamBuilder<List<Annotation>>(
             stream: AnnotationService().streamAnnotations(s.id!),
             builder: (context, snapshot) {
+              // Erreur AVANT hasData, affichage compact (voir la section des
+              // actions menées plus haut).
+              if (snapshot.hasError) {
+                return EtatErreur(
+                  compact: true,
+                  message: 'Les annotations n\'ont pas pu être chargées.',
+                  onReessayer: () => setState(() {}),
+                );
+              }
               if (!snapshot.hasData) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
