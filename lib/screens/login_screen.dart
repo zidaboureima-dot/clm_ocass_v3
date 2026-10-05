@@ -6,7 +6,9 @@ import 'admin_dashboard_screen.dart';
 import 'superviseur_dashboard_screen.dart';
 import 'point_focal_dashboard_screen.dart';
 import '../services/demande_reset_service.dart';
+import '../services/etat_service_service.dart';
 import 'change_password_screen.dart';
+import 'maintenance_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -50,6 +52,31 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _erreur = 'Ce compte est désactivé. Contactez l\'administrateur.');
         return;
       }
+
+      // Interrupteur de maintenance. Il bloque l'accès aux espaces de
+      // traitement, jamais le dépôt d'un signalement par un citoyen — celui-ci
+      // passe par l'écran d'accueil, qui ne vient pas ici.
+      //
+      // L'ADMINISTRATEUR EN EST EXEMPTÉ, délibérément : c'est lui qui conduit
+      // la maintenance, et le bloquer l'obligerait à rouvrir le service sans
+      // avoir pu vérifier que tout est rentré dans l'ordre.
+      //
+      // La lecture échoue en position ouverte (voir EtatServiceService.lire) :
+      // une coupure réseau ne doit pas verrouiller l'application.
+      if (profil.role != 'admin') {
+        final etat = await EtatServiceService().lire();
+        if (!mounted) return;
+        if (!etat.actif) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => MaintenanceScreen(message: etat.message),
+            ),
+          );
+          return;
+        }
+      }
+
+      if (!mounted) return;
       _routerVersDashboard(profil);
     } catch (e) {
       if (!mounted) return;
