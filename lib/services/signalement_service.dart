@@ -62,23 +62,66 @@ class SignalementService {
     // définie de Dart ne considère pas qu'une affectation faite dans un bloc
     // `try` a forcément eu lieu après celui-ci.
     Object? id;
-    try {
-      final data = signalement.toJson();
-      final marqueur = await obtenirMarqueurAppareil();
-      id = await SupabaseConfig.client.rpc(
-        'soumettre_signalement_anonyme',
-        params: {
-          'p_contenu': data,
-          'p_marqueur': marqueur,
-        },
-      );
-    } on PostgrestException catch (e) {
-      if (e.message.contains('RATE_LIMIT')) {
-        throw Exception('Trop de dépôts depuis cet appareil. Réessayez dans quelques minutes.');
+    final data = signalement.toJson();
+    final marqueur = await obtenirMarqueurAppareil();
+
+    // RÉESSAI EN MÉMOIRE — ne survit pas à la fermeture de l'écran.
+    //
+    // POURQUOI PAS DE FILE D'ATTENTE LOCALE
+    //   Stocker un signalement en attente sur l'appareil, c'est écrire le
+    //   contenu d'une dénonciation sur le téléphone de la personne qui
+    //   dénonce. Si ce téléphone est consulté — par un employeur, un proche,
+    //   une autorité — le lien est fait. Le projet refuse cette trace (voir
+    //   le commentaire de marqueur_appareil.dart). Le réessai ne vit donc
+    //   que le temps de l'appel.
+    //
+    // CE QU'ON RÉESSAIE, ET CE QU'ON NE RÉESSAIE PAS
+    //   Une PostgrestException signifie que LE SERVEUR A RÉPONDU : il a reçu
+    //   la demande et l'a rejetée. Réessayer n'y changerait rien et ne ferait
+    //   qu'ajouter un risque de doublon pour rien. On ne réessaie donc que
+    //   les échecs de TRANSPORT — coupure, délai, DNS — où rien ne prouve que
+    //   la demande soit parvenue.
+    //
+    // LE DOUBLON RÉSIDUEL, ASSUMÉ
+    //   Il reste un cas : la demande arrive, la base insère, et c'est la
+    //   RÉPONSE qui se perd. Le réessai crée alors un doublon. C'est accepté,
+    //   et le raisonnement mérite d'être écrit plutôt que subi :
+    //
+    //     un doublon est VISIBLE — un superviseur voit deux signalements
+    //     identiques et les rapproche ;
+    //     un signalement perdu est INVISIBLE — personne ne sait qu'il a
+    //     existé, et la personne qui a pris un risque pour le déposer ne
+    //     revient pas forcément.
+    //
+    //   Entre un défaut réparable et un défaut définitif, on choisit le
+    //   réparable. Le durcissement propre serait une clé de dépôt rendant la
+    //   RPC idempotente ; il est inscrit dans CADRAGE_ROBUSTESSE.md §7.
+    const tentativesMax = 3;
+    for (var tentative = 1; ; tentative++) {
+      try {
+        id = await SupabaseConfig.client.rpc(
+          'soumettre_signalement_anonyme',
+          params: {
+            'p_contenu': data,
+            'p_marqueur': marqueur,
+          },
+        );
+        break;
+      } on PostgrestException catch (e) {
+        // Le serveur a répondu : pas de réessai.
+        if (e.message.contains('RATE_LIMIT')) {
+          throw Exception('Trop de dépôts depuis cet appareil. Réessayez dans quelques minutes.');
+        }
+        throw Exception('Erreur creation: ${e.message}');
+      } catch (e) {
+        if (tentative >= tentativesMax) {
+          throw Exception('Erreur creation: $e');
+        }
+        // Attente croissante : 2 s puis 4 s. Assez pour laisser passer une
+        // coupure brève, assez court pour ne pas donner l'impression que
+        // l'application s'est figée.
+        await Future.delayed(Duration(seconds: 2 * tentative));
       }
-      throw Exception('Erreur creation: ${e.message}');
-    } catch (e) {
-      throw Exception('Erreur creation: $e');
     }
 
     // Contrôle hors du bloc try, pour qu'il ne soit pas ré-emballé par le

@@ -150,12 +150,68 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
       _afficherConfirmation();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de l\'envoi : $e')),
-      );
+      _afficherEchec(e);
     } finally {
       if (mounted) setState(() => _envoiEnCours = false);
     }
+  }
+
+  /// Annonce franchement que le signalement n'a PAS été enregistré.
+  ///
+  /// POURQUOI UN DIALOGUE ET NON UNE NOTIFICATION FUGACE
+  ///   L'échec passait par un SnackBar — un bandeau qui s'efface au bout de
+  ///   quelques secondes, en bas de l'écran, et qu'on peut ne jamais voir. Sur
+  ///   un dispositif où la personne a pris un risque pour venir signaler un
+  ///   refus de soins, lui laisser croire que c'est parti alors que rien n'est
+  ///   enregistré est la pire issue possible.
+  ///
+  ///   Le dialogue est donc bloquant, il dit explicitement que RIEN n'a été
+  ///   enregistré, et il ne ferme pas l'écran : la saisie reste intacte
+  ///   derrière, prête à être renvoyée sans tout ressaisir.
+  ///
+  /// POURQUOI LE TEXTE DE L'EXCEPTION N'EST PLUS AFFICHÉ
+  ///   Même raison que pour EtatErreur : « PostgrestException(...) » ne dit
+  ///   rien à la personne, et cite au passage des noms de tables et de
+  ///   policies — sur un appareil qui peut être consulté par un tiers.
+  ///
+  ///   Seul le message du rate-limit est repris, parce qu'il est déjà rédigé
+  ///   pour un humain et qu'il appelle une conduite précise : attendre.
+  void _afficherEchec(Object erreur) {
+    final texte = erreur.toString();
+    final estRateLimit = texte.contains('Trop de dépôts');
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline, color: AppColors.rouge, size: 28),
+            SizedBox(width: 12),
+            Expanded(child: Text('Signalement non enregistré')),
+          ],
+        ),
+        content: Text(
+          estRateLimit
+              ? 'Trop de dépôts ont été faits depuis cet appareil en peu de '
+                  'temps. Votre signalement n\'a pas été enregistré. '
+                  'Réessayez dans quelques minutes : vos réponses sont '
+                  'conservées à l\'écran.'
+              : 'L\'envoi a échoué et votre signalement n\'a pas été '
+                  'enregistré. Vérifiez votre connexion internet, puis '
+                  'réessayez : vos réponses sont conservées à l\'écran, vous '
+                  'n\'avez rien à ressaisir.',
+          style: const TextStyle(height: 1.5),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Revenir au formulaire'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _afficherConfirmation() {

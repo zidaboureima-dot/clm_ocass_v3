@@ -1,8 +1,6 @@
 # Cadrage — Robustesse avant distribution
 
-**Statut :** points 1 (mode maintenance), 2 (états d'erreur) et 3
-(pagination) **mis en œuvre** le 5 octobre 2026. Restent les points 4
-(tolérance réseau) et 5 (vérification des états vides).
+**Statut :** les cinq points **mis en œuvre** les 5 et 6 octobre 2026.
 **Date :** 5 octobre 2026. Constat établi au commit `5e70f46`.
 
 Ce document cadre cinq points de robustesse soulevés avant la distribution de
@@ -36,7 +34,7 @@ disproportionnée :
 | États d'erreur | ~~**Partiel.**~~ → **fait** le 5 octobre 2026 (§5). Le constat initial était optimiste : voir ci-dessous |
 | États vides | **Fait.** 16 messages couvrant les listes qui comptent |
 | Pagination serveur | ~~**Absente.**~~ → **fait** le 5 octobre 2026 (§4.4) |
-| Tolérance réseau | **Absente.** Ni détection de coupure, ni réessai |
+| Tolérance réseau | ~~**Absente.**~~ → **fait** le 6 octobre 2026 (§7.4) |
 
 **Détail sur les états d'erreur — le constat initial était trop optimiste.**
 
@@ -319,8 +317,18 @@ explique *pourquoi* la liste est vide et *ce qui va se passer* : « Le
 superviseur vous assignera les signalements de votre préfecture. » C'est le
 bon niveau.
 
-Une vérification suffira après la pagination, pour s'assurer qu'un état vide
-ne se confond pas avec une page suivante inexistante.
+**Vérification faite le 6 octobre 2026**, après la pagination. Le risque était
+qu'un état vide se confonde avec une page suivante inexistante. Dans
+`HistoriqueSignalementsScreen`, les deux situations sont distinctes et
+nommées :
+
+- liste vide → « Aucun signalement dans votre périmètre », et le message
+  **reprend le filtre actif** quand il y en a un, pour qu'on ne conclue pas à
+  l'absence totale alors qu'on regarde une seule catégorie ;
+- fin de liste → « *n* signalements — fin de la liste », qui dit à la fois
+  qu'il n'y a plus rien et combien on a vu.
+
+Les seize messages existants des autres écrans restent inchangés.
 
 ---
 
@@ -368,6 +376,41 @@ franchirait précisément cette ligne.
 confidentialité. La troisième est un arbitrage entre perdre des signalements
 et exposer leurs auteurs — il ne se tranche pas sans données de terrain.
 
+### 7.4 Mise en œuvre — faite le 6 octobre 2026
+
+**Réessai en mémoire**, trois tentatives au plus, attente de 2 s puis 4 s. Il
+ne survit pas à la fermeture de l'écran, donc ne laisse aucune trace sur
+l'appareil.
+
+**Ce qui est réessayé, et ce qui ne l'est pas.** Une `PostgrestException`
+signifie que le serveur a répondu : il a reçu la demande et l'a rejetée.
+Réessayer n'y changerait rien et ajouterait un risque de doublon pour rien.
+Seuls les échecs de **transport** — coupure, délai, DNS — sont réessayés.
+C'est ce qui réduit la fenêtre de doublon à un seul cas.
+
+**Le doublon résiduel, assumé.** Il reste la situation où la demande arrive,
+la base insère, et c'est la *réponse* qui se perd. Le réessai crée alors un
+doublon. Le raisonnement, écrit pour qu'il ne soit pas réinventé plus tard :
+
+> Un doublon est **visible** — un superviseur voit deux signalements
+> identiques et les rapproche. Un signalement perdu est **invisible** :
+> personne ne sait qu'il a existé, et la personne qui a pris un risque pour le
+> déposer ne revient pas forcément.
+>
+> Entre un défaut réparable et un défaut définitif, on choisit le réparable.
+
+**Durcissement possible, non retenu pour l'instant :** une clé de dépôt
+transmise par l'application et contrôlée par la RPC rendrait le réessai
+totalement sûr. C'est une migration de plus sur le flux le plus sensible du
+dispositif ; elle mérite d'être éprouvée avant la mise en service, pas
+pendant.
+
+**Message d'échec.** Le SnackBar est remplacé par un dialogue bloquant qui dit
+explicitement que **rien n'a été enregistré**, et qui ne ferme pas l'écran :
+la saisie reste derrière, prête à être renvoyée sans rien ressaisir. Un
+bandeau fugace, en bas d'écran, qu'on peut ne jamais voir, n'était pas à la
+hauteur de ce qu'il annonce.
+
 ---
 
 ## 8. Séquencement proposé
@@ -379,8 +422,9 @@ et exposer leurs auteurs — il ne se tranche pas sans données de terrain.
    branchements, et surtout l'ordre des tests corrigé dans les douze builders.
 3. ~~**Pagination**~~ — **fait le 5 octobre 2026.** Le plus de travail, et le
    seul qui se dégradait tout seul sans jamais rien casser.
-4. **Tolérance réseau**, niveaux 1 et 2 — réessai en mémoire et message franc.
-5. **États vides** — vérification après la pagination.
+4. ~~**Tolérance réseau**~~ — **fait le 6 octobre 2026.** Réessai en mémoire et
+   message franc.
+5. ~~**États vides**~~ — **vérifiés le 6 octobre 2026** (§6).
 
 ---
 
