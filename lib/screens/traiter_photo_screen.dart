@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 import '../data/regions_prefectures.dart';
 import '../models/annotation_model.dart';
 import '../models/categorie_model.dart';
@@ -91,9 +90,10 @@ class _TraiterPhotoScreenState extends State<TraiterPhotoScreen> {
     }
     setState(() => _envoiEnCours = true);
     try {
-      final idSignalement = const Uuid().v4();
+      // L'identifiant vient de la base (voir SignalementService). Un UUID
+      // local laissait la photo et l'annotation se rattacher à un signalement
+      // inexistant.
       final signalement = Signalement(
-        id: idSignalement,
         anonyme: true,
         prefecture: _prefecture!,
         centreSante: _centreSanteController.text.trim(),
@@ -106,7 +106,7 @@ class _TraiterPhotoScreenState extends State<TraiterPhotoScreen> {
         soumisLe: widget.photo.createdAt,
         statut: 'nouveau',
       );
-      await SignalementService().creerSignalement(signalement);
+      final idSignalement = await SignalementService().creerSignalement(signalement);
       await PhotoService().lierPhotoExistante(
         signalementId: idSignalement,
         cheminStockage: widget.photo.cheminStockage,

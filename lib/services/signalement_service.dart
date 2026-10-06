@@ -40,23 +40,59 @@ class SignalementService {
   /// appareil d'entrée de gamme sur une connexion lente.
   static const int taillePageHistorique = 25;
 
-  Future<void> creerSignalement(Signalement signalement) async {
-  try {
-    final data = signalement.toJson();
-    final marqueur = await obtenirMarqueurAppareil();
-    await SupabaseConfig.client.rpc('soumettre_signalement_anonyme', params: {
-      'p_contenu': data,
-      'p_marqueur': marqueur,
-    });
-  } on PostgrestException catch (e) {
-    if (e.message.contains('RATE_LIMIT')) {
-      throw Exception('Trop de dépôts depuis cet appareil. Réessayez dans quelques minutes.');
+  /// Crée un signalement et **renvoie l'identifiant attribué par la base**.
+  ///
+  /// POURQUOI CETTE MÉTHODE RENVOIE QUELQUE CHOSE
+  ///   Elle ne renvoyait rien, et les écrans se rabattaient sur un UUID
+  ///   généré localement pour rattacher la photo et le message vocal. Or la
+  ///   RPC n'insère pas cet identifiant : la base génère le sien. Les deux
+  ///   ne coïncidaient jamais, et depuis le 11 août 2026 aucune pièce jointe
+  ///   ne pouvait se rattacher à son signalement.
+  ///
+  ///   L'identifiant doit donc venir de la base, et de nulle part ailleurs.
+  ///
+  /// NE JAMAIS REVENIR À UN IDENTIFIANT CÔTÉ CLIENT pour ce flux — ni en le
+  /// générant ici, ni en le faisant insérer par la RPC. Un appelant anonyme
+  /// choisirait alors la clé primaire d'un signalement, donc rendrait les
+  /// identifiants prévisibles sur le flux le plus exposé du dispositif.
+  ///
+  /// Voir `supabase/migrations/20261006_rpc_retourne_id_signalement.sql`.
+  Future<String> creerSignalement(Signalement signalement) async {
+    // Déclaré hors du `try` et nullable à dessein : l'analyse d'assignation
+    // définie de Dart ne considère pas qu'une affectation faite dans un bloc
+    // `try` a forcément eu lieu après celui-ci.
+    Object? id;
+    try {
+      final data = signalement.toJson();
+      final marqueur = await obtenirMarqueurAppareil();
+      id = await SupabaseConfig.client.rpc(
+        'soumettre_signalement_anonyme',
+        params: {
+          'p_contenu': data,
+          'p_marqueur': marqueur,
+        },
+      );
+    } on PostgrestException catch (e) {
+      if (e.message.contains('RATE_LIMIT')) {
+        throw Exception('Trop de dépôts depuis cet appareil. Réessayez dans quelques minutes.');
+      }
+      throw Exception('Erreur creation: ${e.message}');
+    } catch (e) {
+      throw Exception('Erreur creation: $e');
     }
-    throw Exception('Erreur creation: ${e.message}');
-  } catch (e) {
-    throw Exception('Erreur creation: $e');
+
+    // Contrôle hors du bloc try, pour qu'il ne soit pas ré-emballé par le
+    // `catch` ci-dessus : si la fonction déployée est encore l'ancienne
+    // (`returns void`), le retour est nul. Mieux vaut une erreur franche
+    // qu'un média rattaché à rien — c'est précisément le défaut corrigé.
+    if (id is! String) {
+      throw Exception(
+        'Le serveur n\'a pas renvoyé l\'identifiant du signalement. '
+        'La migration 20261006 n\'a probablement pas été exécutée.',
+      );
+    }
+    return id;
   }
-}
 
   Future<List<Signalement>> obtenirSignalements() async {
     try {

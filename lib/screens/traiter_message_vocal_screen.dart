@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:uuid/uuid.dart';
 import '../data/regions_prefectures.dart';
 import '../models/categorie_model.dart';
 import '../models/message_vocal_brut_model.dart';
@@ -97,9 +96,9 @@ class _TraiterMessageVocalScreenState extends State<TraiterMessageVocalScreen> {
     }
     setState(() => _envoiEnCours = true);
     try {
-      final idSignalement = const Uuid().v4();
+      // L'identifiant vient de la base (voir SignalementService). Un UUID
+      // local laissait l'annotation se rattacher à un signalement inexistant.
       final signalement = Signalement(
-        id: idSignalement,
         anonyme: true,
         prefecture: _prefecture!,
         centreSante: _centreSanteController.text.trim(),
@@ -112,7 +111,7 @@ class _TraiterMessageVocalScreenState extends State<TraiterMessageVocalScreen> {
         soumisLe: widget.message.createdAt,
         statut: 'nouveau',
       );
-      await SignalementService().creerSignalement(signalement);
+      final idSignalement = await SignalementService().creerSignalement(signalement);
       await AnnotationService().ajouterAnnotation(
         Annotation(
           signalementId: idSignalement,

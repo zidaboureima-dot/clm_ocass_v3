@@ -383,6 +383,15 @@ npx supabase functions deploy rapport-periodique --no-verify-jwt
   → extraire → minimiser → appeler le modèle → enregistrer en brouillon.
   Chaque étape est le préalable de la suivante ; les réorganiser revient à
   supprimer le garde-fou correspondant. C'est commenté dans le fichier.
+- **L'identifiant d'un signalement vient de la base, jamais du client.**
+  `soumettre_signalement_anonyme` renvoie l'identifiant attribué ; les écrans
+  attendent ce retour avant d'envoyer la moindre pièce jointe. Pendant près de
+  deux mois, les écrans généraient un UUID local que la RPC n'insérait pas :
+  photos, audios et annotations se rattachaient à un signalement inexistant,
+  sans qu'aucune erreur ne le signale. Ne jamais réintroduire un identifiant
+  côté client sur ce flux — ni en le générant dans l'application, ni en le
+  faisant insérer par la RPC : un appelant anonyme choisirait alors la clé
+  primaire, donc rendrait les identifiants prévisibles.
 - **Secrets** : `android/key.properties` et `.env` sont dans `.gitignore`.
   Ne jamais les committer, ne jamais écrire de clé en dur.
 

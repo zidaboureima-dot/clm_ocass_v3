@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 import '../data/regions_prefectures.dart';
 import '../models/categorie_model.dart';
 import '../models/signalement_model.dart';
@@ -95,9 +94,13 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
   Future<void> _soumettre() async {
     setState(() => _envoiEnCours = true);
     try {
-      final idSignalement = const Uuid().v4();
+      // L'IDENTIFIANT VIENT DE LA BASE, PAS D'ICI.
+      // Cet écran générait un UUID local et s'en servait pour rattacher la
+      // photo et l'audio. Mais la RPC n'insère pas cet identifiant : la base
+      // génère le sien. Depuis le 11 août 2026, aucune pièce jointe ne
+      // pouvait donc se rattacher à son signalement — le citoyen recevait une
+      // confirmation, et sa preuve n'atteignait personne.
       final signalement = Signalement(
-        id: idSignalement,
         anonyme: true,
         prefecture: _prefecture!,
         centreSante: _centreSanteController.text.trim(),
@@ -113,7 +116,7 @@ class _SignalementFormScreenState extends State<SignalementFormScreen> {
         soumisLe: DateTime.now(),
         statut: 'nouveau',
       );
-      await SignalementService().creerSignalement(signalement);
+      final idSignalement = await SignalementService().creerSignalement(signalement);
       if (_fichierAudio != null) {
         try {
           await AudioService().uploaderAudio(
