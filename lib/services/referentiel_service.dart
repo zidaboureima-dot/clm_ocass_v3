@@ -208,21 +208,34 @@ class ReferentielService {
     String? prefectureId,
     bool? actif,
   }) async {
+    // Map construite par affectations et non en littérale : seuls les champs
+    // réellement fournis doivent partir, un `null` passé à l'appelant voulant
+    // dire « ne touche pas », pas « efface ».
+    final champs = <String, dynamic>{};
+    if (nom != null) champs['nom'] = nom;
+
+    // Un champ VIDÉ par l'administrateur devient NULL, jamais ''.
+    // `code` porte une contrainte d'unicité : deux établissements sans code,
+    // enregistrés avec une chaîne vide, se refuseraient l'un l'autre — et le
+    // message parlerait d'un doublon de code que personne n'a saisi.
+    if (code != null) champs['code'] = code.isEmpty ? null : code;
+    if (typeEtablissement != null) {
+      champs['type_etablissement'] =
+          typeEtablissement.isEmpty ? null : typeEtablissement;
+    }
+
+    if (prefectureId != null) champs['prefecture_id'] = prefectureId;
+    if (actif != null) champs['actif'] = actif;
+
+    // Un update sans colonne est refusé par PostgREST ; il n'y a de toute
+    // façon rien à écrire.
+    if (champs.isEmpty) return;
+
     try {
-      await SupabaseConfig.client.from('formations_sanitaires').update({
-        if (nom != null) 'nom': nom,
-        // Un champ vidé par l'administrateur devient NULL, jamais ''.
-        // `code` porte une contrainte d'unicité : deux établissements sans
-        // code, enregistrés avec une chaîne vide, se refuseraient l'un
-        // l'autre — et le message parlerait d'un doublon de code que
-        // personne n'a saisi.
-        if (code != null) 'code': code.isEmpty ? null : code,
-        if (typeEtablissement != null)
-          'type_etablissement':
-              typeEtablissement.isEmpty ? null : typeEtablissement,
-        if (prefectureId != null) 'prefecture_id': prefectureId,
-        if (actif != null) 'actif': actif,
-      }).eq('id', id);
+      await SupabaseConfig.client
+          .from('formations_sanitaires')
+          .update(champs)
+          .eq('id', id);
     } on PostgrestException catch (e) {
       throw Exception(_messageLisible(e, nom ?? ''));
     }
