@@ -11,6 +11,7 @@ import 'admin_accounts_tab.dart';
 import 'admin_categories_tab.dart';
 import 'admin_messages_vocaux_tab.dart';
 import 'admin_photos_tab.dart';
+import 'admin_referentiel_tab.dart';
 import 'change_password_screen.dart';
 import 'signalement_detail_screen.dart';
 import 'stats_body.dart';
@@ -81,7 +82,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 7,
+      length: 8,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Espace administrateur'),
@@ -90,6 +91,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             tabs: [
               const Tab(text: 'Signalements'),
               const Tab(text: 'Catégories'),
+              const Tab(text: 'Référentiel'),
               const Tab(text: 'Statistiques'),
               const Tab(text: 'Comptes'),
               Tab(
@@ -304,6 +306,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
             const AdminCategoriesTab(),
+            const AdminReferentielTab(),
             StatsBody(
               stream: SignalementService().streamToutesSignalementsPourStats(),
               description: 'Vue nationale, toutes régions confondues.',

@@ -219,10 +219,46 @@ parmi les préfectures.
 modification fait varier ces nombres sans qu'un texte l'ait décidé, c'est une
 erreur de saisie.
 
-*Cet épisode illustre la limite du modèle mono-pays : une décision
-administrative impose une recompilation et une republication. Dans
-l'architecture visée, la hiérarchie sanitaire relève de la configuration par
-pays, idéalement ingérée depuis le DHIS2 national.*
+### Depuis le 12 octobre 2026, la base fait foi
+
+`20261012_referentiel_geo_sanitaire.sql` sort la géographie du code. Les
+tables `regions`, `prefectures` et `formations_sanitaires` sont administrables
+depuis l'onglet **Référentiel** de l'espace administrateur : un décret ne
+demande plus de recompilation.
+
+**`lib/data/regions_prefectures.dart` n'est pas supprimé : il devient le repli
+de secours.** `ReferentielService` y revient quand la base est injoignable ou
+répond une liste vide, pour que le formulaire citoyen ne se retrouve jamais
+avec des listes déroulantes vides — une personne venue signaler un refus de
+soins et qui trouve un écran inutilisable ne revient pas. Il faut donc
+continuer à le tenir à jour, et ses deux contrôles (44 et 9) restent valables.
+
+Les identifiants produits par le repli sont préfixés `secours:` et ne
+correspondent à aucune ligne réelle. `ReferentielService.estIdDeSecours()`
+les reconnaît ; **ne jamais les écrire en base.**
+
+### Les formations sanitaires existent enfin
+
+`signalements.centre_sante` reste un **champ de texte libre** : une liste
+fermée transformerait un établissement absent du référentiel en signalement
+perdu. Le rattachement se fait après coup, **par alias** — une graphie
+rattachée une fois rattache toutes ses occurrences futures, et la reprise de
+l'historique est faite par `rapprocher_libelle()` dans le même acte.
+
+La colonne `signalements.formation_sanitaire_id` est **nullable et doit le
+rester** : un signalement non rapproché doit être déposé, acheminé et traité
+normalement. Le rapprochement améliore la donnée, il ne conditionne pas la
+recevabilité.
+
+⚠️ **`signalements.region` et `.prefecture` restent du TEXTE.** Elles portent
+le cloisonnement RLS via `region_du_demandeur()`, qui compare du texte. Le
+référentiel s'ajoute à côté, il ne le traverse pas. Les basculer sur des clés
+étrangères est une migration à elle seule : une erreur sur ce chemin n'échoue
+pas bruyamment, elle ouvre à un superviseur la lecture d'une autre région.
+
+Mesure prise le 12 octobre 2026 sur les données de production : **presque
+chaque signalement avait écrit le nom de son établissement autrement**
+(39 signalements à Kaloum, toutes les graphies à une occurrence).
 
 ---
 
